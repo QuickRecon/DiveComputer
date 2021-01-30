@@ -28,6 +28,8 @@
 
 struct RealTime;
 
+struct DiveScreen;
+
 // Accelerometer Params
 extern Adafruit_LSM303_Accel_Unified Accel;
 
@@ -53,7 +55,12 @@ struct DepthSensorData
 };
 
 bool InitRTC();
-
+bool InitDepth();
+DepthSensorData ReadDepthSensor();
 RealTime ReadRTC();
+double ReadHeading();
+
+
+DiveScreen CollectData();
 
 #endif //DIVECOMPUTER_HWINTERFACE_H

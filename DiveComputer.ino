@@ -18,11 +18,11 @@ void setup() {
     if (!pass) {
         ESP.restart();
     }
-
     DiveStartTime = ReadRTC();
 }
 
 void loop() {
-    rtc.update();
-    Serial.println(rtc.second());
+    DiveScreen data = CollectData();
+    ShowDiveScreen(data);
+    Serial.println(ReadHeading());
 }

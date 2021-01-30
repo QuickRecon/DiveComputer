@@ -8,21 +8,23 @@
 #include "DiveComputer.h"
 #include "HWInterface.h"
 
-struct RealTime
-{
-    int Second;
-    int Minute;
-    int Hour;
+#define ASCENT_RATE 10
+#define DESCENT_RATE 30
 
-    int Day;
-    int Month;
-    int Year;
-};
+struct RealTime;
 
+extern double CNSPercent;
+extern double OTUs;
+extern double AverageDepth;
+extern double LastDepth;
 extern Deco DecoActual;
-
 extern RealTime DiveStartTime;
+extern Deco::Schedule CurrentSchedule;
 
-std::vector <Deco::DecoStop> GetDecoSchedule();
-std::vector <Deco::DecoStop> GetDecoSchedule(Deco *decoObject);
+Deco::Schedule GetDecoSchedule();
+Deco::Schedule GetDecoSchedule(Deco *decoObject);
+double TimeDiff(RealTime time1, RealTime time2);
+Deco::Gas GetCurrGas();
+double GetTTS(const Deco::Schedule& schedule);
+
 #endif //DIVECOMPUTER_DIVEMANAGER_H
