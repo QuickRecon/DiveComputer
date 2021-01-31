@@ -26,6 +26,9 @@
 
 #define TFT_BRIGHTNESS 200 // Initial brightness of TFT backlight (optional)
 
+// RTC Params
+#define RTC_CS 15
+
 struct RealTime;
 
 struct DiveScreen;

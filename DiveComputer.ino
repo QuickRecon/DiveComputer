@@ -8,6 +8,12 @@ void ResetWatchdog()
 
 void setup() {
     Serial.begin(9600);
+    pinMode(TFT_CS, OUTPUT);
+    pinMode(RTC_CS, OUTPUT);
+
+    digitalWrite(TFT_CS, HIGH);
+    digitalWrite(RTC_CS, HIGH);
+
     Tft.begin();
     Tft.clear();
     Tft.setOrientation(1);
@@ -24,5 +30,4 @@ void setup() {
 void loop() {
     DiveScreen data = CollectData();
     ShowDiveScreen(data);
-    Serial.println(ReadHeading());
 }

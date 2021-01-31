@@ -31,12 +31,13 @@ void ShowDiveScreen(DiveScreen data)
     Tft.drawText(COLUMN_3, ROW_2, "Head.");
     Tft.drawText(COLUMN_4, ROW_2, "Rate");
 
-    Tft.drawText(COLUMN_1, ROW_3, "Clock");
+
     Tft.drawText(COLUMN_2, ROW_3, "Avg. D");
     Tft.drawText(COLUMN_3, ROW_3, "TTS");
     Tft.drawText(COLUMN_4, ROW_3, "CNS");
 
     Tft.drawText((COLUMN_1+COLUMN_2)/2, ROW_4, "Gas");
+    Tft.drawText((COLUMN_3+COLUMN_4)/2, ROW_4, "Clock");
 
     // Draw Numbers
     Tft.setFont(Terminal11x16);
@@ -83,11 +84,6 @@ void ShowDiveScreen(DiveScreen data)
     sprintf(rate, "%.1f",data.Rate);
     Tft.drawText(COLUMN_4, ROW_2+VAL_OFFSET, rate);
 
-    // Real Time
-    char time[7];
-    sprintf(time, "%d:%d",data.Time.Hour, data.Time.Minute);
-    Tft.drawText(COLUMN_1, ROW_3+VAL_OFFSET, time);
-
     // Average Depth
     char avgDepth[7];
     sprintf(avgDepth, "%.1f",data.AverageDepth);
@@ -107,6 +103,11 @@ void ShowDiveScreen(DiveScreen data)
     char gas[7];
     sprintf(gas, "%02.0f/%02.0f",data.Gas.FrO2*100,data.Gas.FrHe*100);
     Tft.drawText(COLUMN_1+10, ROW_4+VAL_OFFSET, gas);
+
+    // Real Time
+    char time[7];
+    sprintf(time, "%02d:%02d",data.Time.Hour, data.Time.Minute);
+    Tft.drawText(COLUMN_3+10, ROW_4+VAL_OFFSET, time);
 }
 
 
@@ -120,7 +121,7 @@ bool SelfTest() {
 
     textRow += 15;
     Tft.drawText(10, textRow, "RTC...");
-    if (InitRTC()) {
+    if (!InitRTC()) {
         Tft.drawText(130, textRow, "ERR", COLOR_RED);
         pass = false;
     } else {

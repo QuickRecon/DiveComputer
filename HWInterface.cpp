@@ -25,8 +25,10 @@ TFT_22_ILI9225 Tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHT
 
 
 bool InitRTC() {
+    rtc.begin(RTC_CS);
     rtc.autoTime();
     bool status = ReadRTC().Second <= 60 && ReadRTC().Minute <= 60 && ReadRTC().Hour <= 24 ;
+
     return status; // Sanity check to ensure RTC is working
 }
 
