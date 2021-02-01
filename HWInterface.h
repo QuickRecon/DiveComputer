@@ -17,21 +17,31 @@
 #include "MS5837.h"
 #include <Wire.h>
 #include <SPI.h>
+#include "LittleFS.h"
+
+#include <cmath>
+
+// Serial Port
+#define EnableSerial // Disables screen PWM
 
 // TFT Params
 #define TFT_RST 0   // D3
 #define TFT_RS  16   // D0
 #define TFT_CS  2  // D8 SS
-#define TFT_LED 0   // D4     set 0 if wired to +5V directly -> D3=0 is not possible !!
-
-#define TFT_BRIGHTNESS 200 // Initial brightness of TFT backlight (optional)
+#ifndef EnableSerial
+#define TFT_LED 1   // D4     set 0 if wired to +5V directly -> D3=0 is not possible !!
+#else
+#define TFT_LED 0
+#endif
+#define TFT_BRIGHTNESS 255 // Initial brightness of TFT backlight (optional)
 
 // RTC Params
 #define RTC_CS 15
+#define SET_CLOCK 0
 
 struct RealTime;
 
-struct DiveScreen;
+struct UIData;
 
 // Accelerometer Params
 extern Adafruit_LSM303_Accel_Unified Accel;
@@ -57,6 +67,8 @@ struct DepthSensorData
     float Temperature;
 };
 
+
+
 bool InitRTC();
 bool InitDepth();
 DepthSensorData ReadDepthSensor();
@@ -64,6 +76,6 @@ RealTime ReadRTC();
 double ReadHeading();
 
 
-DiveScreen CollectData();
+UIData CollectData();
 
 #endif //DIVECOMPUTER_HWINTERFACE_H

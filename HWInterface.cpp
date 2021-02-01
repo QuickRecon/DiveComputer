@@ -3,7 +3,6 @@
 //
 #include "HWInterface.h"
 
-#include <cmath>
 
 // Accelerometer Params
 Adafruit_LSM303_Accel_Unified Accel = Adafruit_LSM303_Accel_Unified(54321);
@@ -26,7 +25,10 @@ TFT_22_ILI9225 Tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHT
 
 bool InitRTC() {
     rtc.begin(RTC_CS);
-    rtc.autoTime();
+    if(SET_CLOCK)
+    {
+        rtc.autoTime();
+    }
     bool status = ReadRTC().Second <= 60 && ReadRTC().Minute <= 60 && ReadRTC().Hour <= 24 ;
 
     return status; // Sanity check to ensure RTC is working
@@ -53,9 +55,9 @@ RealTime ReadRTC()
     rtc.update();
     RealTime data{};
 
-    //data.Day = rtc.date();
-    //data.Month = rtc.month();
-    //data.Year = rtc.year();
+    data.Day = rtc.date();
+    data.Month = rtc.month();
+    data.Year = rtc.year();
 
     data.Hour = rtc.hour();
     data.Minute = rtc.minute();
@@ -83,9 +85,9 @@ double ReadHeading()
     return heading;
 }
 
-DiveScreen CollectData()
+UIData CollectData()
 {
-    DiveScreen screenData{};
+    UIData screenData{};
 
     DepthSensorData depthData = ReadDepthSensor();
     screenData.AmbientPressure = depthData.Pressure/1000.0;

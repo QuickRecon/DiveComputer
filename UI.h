@@ -21,6 +21,7 @@
 #define COLUMN_4 160
 
 extern bool ShowingDiveScreen;
+extern bool ShowingSurfaceScreen;
 
 struct RealTime
 {
@@ -33,7 +34,7 @@ struct RealTime
     int Year;
 };
 
-struct DiveScreen
+struct UIData
 {
     double Depth;
     double AmbientPressure;
@@ -49,10 +50,22 @@ struct DiveScreen
     double AverageDepth;
     double TTS;
     double CNS;
+};
 
+struct Bar
+{
+    int OriginX;
+    int OriginY;
+    int Length;
+    int Thickness;
+    bool Vertical;
+    int Color;
+    double MaxValue;
+    bool EndStop;
 };
 
 bool SelfTest();
-void ShowDiveScreen(DiveScreen data);
+void ShowDiveScreen(UIData data);
+void ShowSurfaceScreen(UIData data);
 
 #endif //DIVECOMPUTER_UI_H
