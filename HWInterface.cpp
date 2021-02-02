@@ -11,10 +11,10 @@ Adafruit_LSM303_Accel_Unified Accel = Adafruit_LSM303_Accel_Unified(54321);
 Adafruit_LSM303DLH_Mag_Unified Mag = Adafruit_LSM303DLH_Mag_Unified(12345);
 
 // ADC1 Params
-Adafruit_ADS1115 Adc1 =  Adafruit_ADS1115(0x49);
+Adafruit_ADS1115 Adc1 = Adafruit_ADS1115(0x49);
 
 // ADC2 Params
-Adafruit_ADS1115 Adc2 =  Adafruit_ADS1115(0x48);
+Adafruit_ADS1115 Adc2 = Adafruit_ADS1115(0x48);
 
 // Depth Sensor Params
 MS5837 DepthSensor;
@@ -25,24 +25,21 @@ TFT_22_ILI9225 Tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHT
 
 bool InitRTC() {
     rtc.begin(RTC_CS);
-    if(SET_CLOCK)
-    {
+    if (SET_CLOCK) {
         rtc.autoTime();
     }
-    bool status = ReadRTC().Second <= 60 && ReadRTC().Minute <= 60 && ReadRTC().Hour <= 24 ;
+    bool status = ReadRTC().Second <= 60 && ReadRTC().Minute <= 60 && ReadRTC().Hour <= 24;
 
     return status; // Sanity check to ensure RTC is working
 }
 
-bool InitDepth()
-{
+bool InitDepth() {
     bool status = DepthSensor.init();
-    SurfacePressure = ReadDepthSensor().Pressure/1000.0;
+    SurfacePressure = ReadDepthSensor().Pressure / 1000.0;
     return status;
 }
 
-DepthSensorData ReadDepthSensor()
-{
+DepthSensorData ReadDepthSensor() {
     DepthSensor.read();
     DepthSensorData data{};
     data.Pressure = DepthSensor.pressure();
@@ -50,8 +47,7 @@ DepthSensorData ReadDepthSensor()
     return data;
 }
 
-RealTime ReadRTC()
-{
+RealTime ReadRTC() {
     rtc.update();
     RealTime data{};
 
@@ -66,65 +62,55 @@ RealTime ReadRTC()
     return data;
 }
 
-void PollButtons()
-{
+void PollButtons() {
     int16_t button1Val, button2Val;
     button1Val = Adc1.readADC_SingleEnded(BUTTON_1_CHANNEL); // Button 1 on left
     button2Val = Adc1.readADC_SingleEnded(BUTTON_2_CHANNEL); // Button 2 on right
 
-    Serial.print("Button 1: "); Serial.println(button1Val);
-    Serial.print("Button 2: "); Serial.println(button2Val);
+    Serial.print("Button 1: ");
+    Serial.println(button1Val);
+    Serial.print("Button 2: ");
+    Serial.println(button2Val);
 
     bool button1 = button1Val > BUTTON_POS_THRESHOLD || button1Val < BUTTON_NEG_THRESHOLD;
     bool button2 = button2Val > BUTTON_POS_THRESHOLD || button2Val < BUTTON_NEG_THRESHOLD;
 
-    if(button1 && button2)
-    {
-       if(button1Val > button2Val)
-       {
-           ButtonOne();
-       }
-       else
-       {
-           ButtonTwo();
-       }
-    }
-    else if (button1)
-    {
+    if (button1 && button2) {
+        if (button1Val > button2Val) {
+            ButtonOne();
+        } else {
+            ButtonTwo();
+        }
+    } else if (button1) {
         ButtonOne();
-    }
-    else if (button2)
-    {
+    } else if (button2) {
         ButtonTwo();
     }
 }
 
-double ReadHeading()
-{
+double ReadHeading() {
     sensors_event_t event;
     Mag.getEvent(&event);
 
     double Pi = 3.14159;
 
     // Calculate the angle of the vector y,x
-    double heading = (atan2(event.magnetic.z,event.magnetic.x) * 180) / Pi;
+    double heading = (atan2(event.magnetic.z, event.magnetic.x) * 180) / Pi;
 
     // Normalize to 0-360
-    if (heading < 0)
-    {
+    if (heading < 0) {
         heading = 360 + heading;
     }
 
     return heading;
 }
 
-UIData CollectData()
-{
+UIData CollectData() {
     UIData screenData{};
 
     DepthSensorData depthData = ReadDepthSensor();
-    screenData.AmbientPressure = depthData.Pressure/1000.0;
-    screenData.Depth = BarToMeter(depthData.Pressure/1000.0);
+    screenData.AmbientPressure = depthData.Pressure / 1000.0;
+    screenData.Depth = BarToMeter(depthData.Pressure / 1000.0);
     screenData.Temperature = depthData.Temperature;
 
     screenData.Heading = ReadHeading();
@@ -145,14 +131,11 @@ UIData CollectData()
 
     CurrentSchedule = GetDecoSchedule();
 
-    if(GetDecoSchedule().empty())
-    {
+    if (GetDecoSchedule().empty()) {
         screenData.NDL = DecoActual.GetNoDecoTime();
         screenData.Stop = Deco::DecoStop();
-    }
-    else
-    {
-        screenData.Stop =  CurrentSchedule[0];
+    } else {
+        screenData.Stop = CurrentSchedule[0];
         screenData.NDL = -1;
     }
 

@@ -4,6 +4,7 @@
 
 #ifndef DIVECOMPUTER_DIVEMANAGER_H
 #define DIVECOMPUTER_DIVEMANAGER_H
+
 #include <Deco.h>
 #include "DiveComputer.h"
 #include "HWInterface.h"
@@ -22,9 +23,13 @@ extern RealTime DiveStartTime;
 extern Deco::Schedule CurrentSchedule;
 
 Deco::Schedule GetDecoSchedule();
+
 Deco::Schedule GetDecoSchedule(Deco *decoObject);
+
 double TimeDiff(RealTime time1, RealTime time2);
+
 Deco::Gas GetCurrGas();
-double GetTTS(const Deco::Schedule& schedule);
+
+double GetTTS(const Deco::Schedule &schedule);
 
 #endif //DIVECOMPUTER_DIVEMANAGER_H

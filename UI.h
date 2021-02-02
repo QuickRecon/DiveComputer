@@ -23,8 +23,7 @@
 extern bool ShowingDiveScreen;
 extern bool ShowingSurfaceScreen;
 
-struct RealTime
-{
+struct RealTime {
     int Second;
     int Minute;
     int Hour;
@@ -34,8 +33,7 @@ struct RealTime
     int Year;
 };
 
-struct UIData
-{
+struct UIData {
     double Depth;
     double AmbientPressure;
     double Temperature;
@@ -52,8 +50,7 @@ struct UIData
     double CNS;
 };
 
-struct Bar
-{
+struct Bar {
     int OriginX;
     int OriginY;
     int Length;
@@ -65,9 +62,13 @@ struct Bar
 };
 
 bool SelfTest();
+
 void ShowDiveScreen(UIData data);
+
 void ShowSurfaceScreen(UIData data);
+
 void ButtonOne();
+
 void ButtonTwo();
 
 

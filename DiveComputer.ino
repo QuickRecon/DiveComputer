@@ -1,8 +1,7 @@
 // Include application, user and local libraries
 #include "DiveComputer.h"
 
-void ResetWatchdog()
-{
+void ResetWatchdog() {
     ESP.wdtFeed();
 }
 

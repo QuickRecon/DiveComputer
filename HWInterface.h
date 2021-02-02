@@ -59,7 +59,7 @@ extern Adafruit_LSM303DLH_Mag_Unified Mag;
 extern Adafruit_ADS1115 Adc1;
 
 // ADC2 Params
-extern Adafruit_ADS1115 Adc2 ;
+extern Adafruit_ADS1115 Adc2;
 
 // Depth Sensor Params
 extern MS5837 DepthSensor;
@@ -67,19 +67,22 @@ extern MS5837 DepthSensor;
 // Use hardware SPI (faster - on Uno: 13-SCK, 12-MISO, 11-MOSI)
 extern TFT_22_ILI9225 Tft;
 
-struct DepthSensorData
-{
+struct DepthSensorData {
     float Pressure;
     float Temperature;
 };
 
 
-
 bool InitRTC();
+
 bool InitDepth();
+
 DepthSensorData ReadDepthSensor();
+
 RealTime ReadRTC();
+
 double ReadHeading();
+
 void PollButtons();
 
 UIData CollectData();
