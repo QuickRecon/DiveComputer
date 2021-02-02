@@ -320,3 +320,13 @@ bool SelfTest() {
     }
     return pass;
 }
+
+void ButtonOne()
+{
+    Serial.println("Button 1");
+}
+
+void ButtonTwo()
+{
+    Serial.println("Button 2");
+}

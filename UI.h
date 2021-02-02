@@ -67,5 +67,8 @@ struct Bar
 bool SelfTest();
 void ShowDiveScreen(UIData data);
 void ShowSurfaceScreen(UIData data);
+void ButtonOne();
+void ButtonTwo();
+
 
 #endif //DIVECOMPUTER_UI_H

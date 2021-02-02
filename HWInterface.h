@@ -24,6 +24,12 @@
 // Serial Port
 #define EnableSerial // Disables screen PWM
 
+// Button Parameters
+#define BUTTON_POS_THRESHOLD 1000
+#define BUTTON_NEG_THRESHOLD -300
+#define BUTTON_1_CHANNEL 3
+#define BUTTON_2_CHANNEL 2
+
 // TFT Params
 #define TFT_RST 0   // D3
 #define TFT_RS  16   // D0
@@ -74,7 +80,7 @@ bool InitDepth();
 DepthSensorData ReadDepthSensor();
 RealTime ReadRTC();
 double ReadHeading();
-
+void PollButtons();
 
 UIData CollectData();
 

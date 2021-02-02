@@ -15,7 +15,7 @@ void setup() {
     digitalWrite(RTC_CS, HIGH);
 
     Tft.begin();
-    Tft.setBacklightBrightness(TFT_BRIGHTNESS)
+    Tft.setBacklightBrightness(TFT_BRIGHTNESS);
     Tft.clear();
     Tft.setOrientation(1);
     Tft.setFont(Terminal6x8);
@@ -30,19 +30,9 @@ void setup() {
 }
 
 void loop() {
+    PollButtons();
+
     UIData data = CollectData();
     ShowDiveScreen(data);
 
-    int16_t adc_val0, adc_val1, adc_val2, adc_val3;
-    adc_val0 = Adc1.readADC_SingleEnded(0);
-    adc_val1 = Adc1.readADC_SingleEnded(1);
-    adc_val2 = Adc1.readADC_SingleEnded(2);
-    adc_val3 = Adc1.readADC_SingleEnded(3);
-    #ifdef EnableSerial
-    //Serial.print("AIN0: "); Serial.println(adc_val0);
-    //Serial.print("AIN1: "); Serial.println(adc_val1);
-    //Serial.print("AIN2: "); Serial.println(adc_val2);
-    //Serial.print("AIN3: "); Serial.println(adc_val3);
-    //Serial.println(" ");
-    #endif
 }

@@ -66,6 +66,39 @@ RealTime ReadRTC()
     return data;
 }
 
+void PollButtons()
+{
+    int16_t button1Val, button2Val;
+    button1Val = Adc1.readADC_SingleEnded(BUTTON_1_CHANNEL); // Button 1 on left
+    button2Val = Adc1.readADC_SingleEnded(BUTTON_2_CHANNEL); // Button 2 on right
+
+    Serial.print("Button 1: "); Serial.println(button1Val);
+    Serial.print("Button 2: "); Serial.println(button2Val);
+
+    bool button1 = button1Val > BUTTON_POS_THRESHOLD || button1Val < BUTTON_NEG_THRESHOLD;
+    bool button2 = button2Val > BUTTON_POS_THRESHOLD || button2Val < BUTTON_NEG_THRESHOLD;
+
+    if(button1 && button2)
+    {
+       if(button1Val > button2Val)
+       {
+           ButtonOne();
+       }
+       else
+       {
+           ButtonTwo();
+       }
+    }
+    else if (button1)
+    {
+        ButtonOne();
+    }
+    else if (button2)
+    {
+        ButtonTwo();
+    }
+}
+
 double ReadHeading()
 {
     sensors_event_t event;
