@@ -20,8 +20,37 @@
 #define COLUMN_3 110
 #define COLUMN_4 160
 
-extern bool ShowingDiveScreen;
-extern bool ShowingSurfaceScreen;
+#define MAX_GAS_COUNT 10
+#define MENU_STRING_LENGTH 20
+enum Mode {
+    DIVE,
+    SURFACE
+};
+
+struct MenuItem {
+    MenuItem();
+
+    char *MenuText{};
+    void ( *Callback)(MenuItem item){};
+    bool Enabled{};
+    MenuItem(char *menuText, void (*const callback)(MenuItem item),bool enabled): MenuText(menuText),Callback(callback),Enabled(enabled){}
+};
+
+struct Menu
+{
+    struct MenuItem *Items;
+    int ItemsSize;
+    int CurrIndex;
+    Menu(struct MenuItem* items, int itemsSize,int currIndex) : Items(items), ItemsSize(itemsSize), CurrIndex(currIndex){}
+};
+
+struct UIState
+{
+    int Mode;
+    bool InMenu;
+    struct Menu* Menu;
+    bool ClearNeeded;
+};
 
 struct RealTime {
     int Second;
@@ -71,5 +100,26 @@ void ButtonOne();
 
 void ButtonTwo();
 
+void ShowDiveTopRow(UIData data);
+
+void ShowBottomRow(UIData data);
+
+void ShowBar(Bar bar, double value);
+
+void UpdateUI(UIData data);
+
+void ShowMenu(Menu menu);
+
+void SwitchGasCallback(MenuItem item);
+
+void EndDiveCallback(MenuItem item);
+
+void TurnOffCallback(MenuItem item);
+
+void StartWebCallback(MenuItem item);
+
+void StartDiveCallback(MenuItem item);
+
+void GasMenuCallback(MenuItem item);
 
 #endif //DIVECOMPUTER_UI_H

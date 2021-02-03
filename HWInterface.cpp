@@ -3,6 +3,8 @@
 //
 #include "HWInterface.h"
 
+double LastButton1Val = 1000;
+double LastButton2Val = 1000;
 
 // Accelerometer Params
 Adafruit_LSM303_Accel_Unified Accel = Adafruit_LSM303_Accel_Unified(54321);
@@ -11,16 +13,16 @@ Adafruit_LSM303_Accel_Unified Accel = Adafruit_LSM303_Accel_Unified(54321);
 Adafruit_LSM303DLH_Mag_Unified Mag = Adafruit_LSM303DLH_Mag_Unified(12345);
 
 // ADC1 Params
-Adafruit_ADS1115 Adc1 = Adafruit_ADS1115(0x49);
+QR_ADS1115 Adc1 = QR_ADS1115(0x49);
 
 // ADC2 Params
-Adafruit_ADS1115 Adc2 = Adafruit_ADS1115(0x48);
+QR_ADS1115 Adc2 = QR_ADS1115(0x48);
 
 // Depth Sensor Params
 MS5837 DepthSensor;
 
 // Use hardware SPI (faster - on Uno: 13-SCK, 12-MISO, 11-MOSI)
-TFT_22_ILI9225 Tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHTNESS);
+TFT_22_ILI9225 Tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, 0, 255);
 
 
 bool InitRTC() {
@@ -72,8 +74,11 @@ void PollButtons() {
     Serial.print("Button 2: ");
     Serial.println(button2Val);
 
-    bool button1 = button1Val > BUTTON_POS_THRESHOLD || button1Val < BUTTON_NEG_THRESHOLD;
-    bool button2 = button2Val > BUTTON_POS_THRESHOLD || button2Val < BUTTON_NEG_THRESHOLD;
+    bool button1 = button1Val > LastButton1Val + BUTTON_THRESHOLD;
+    bool button2 = button2Val > LastButton2Val + BUTTON_THRESHOLD;
+
+    LastButton1Val = button1Val;
+    LastButton2Val = button2Val;
 
     if (button1 && button2) {
         if (button1Val > button2Val) {
@@ -139,8 +144,24 @@ UIData CollectData() {
         screenData.NDL = -1;
     }
 
-
     screenData.TTS = GetTTS(CurrentSchedule);
 
     return screenData;
+}
+
+void TurnOff(){
+    //Serial.println("Turning off");
+    pinMode(TFT_LED, HIGH);
+    Tft.setDisplay(false);
+    Adc1.startComparator_SingleEnded(BUTTON_1_CHANNEL, LastButton1Val+100);
+
+
+    wifi_station_disconnect();
+    wifi_set_opmode_current(NULL_MODE);
+    wifi_fpm_set_sleep_type(LIGHT_SLEEP_T); // set sleep type, the above    posters wifi_set_sleep_type() didnt seem to work for me although it did let me compile and upload with no errors
+    wifi_fpm_open(); // Enables force sleep
+    gpio_pin_wakeup_enable(GPIO_ID_PIN(PWR_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO_ID_PIN(2) corresponds to GPIO2 on ESP8266-01 , GPIO_PIN_INTR_LOLEVEL for a logic low, can also do other interrupts, see gpio.h above
+    wifi_fpm_do_sleep(0xFFFFFFF); // Sleep for longest possible time
+    // Be asleep
+    ESP.restart(); //On Wake restart
 }

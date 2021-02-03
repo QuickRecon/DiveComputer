@@ -32,4 +32,8 @@ Deco::Gas GetCurrGas();
 
 double GetTTS(const Deco::Schedule &schedule);
 
+void StartDive();
+
+void EndDive();
+
 #endif //DIVECOMPUTER_DIVEMANAGER_H

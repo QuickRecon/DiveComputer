@@ -7,14 +7,17 @@ void ResetWatchdog() {
 
 void setup() {
     Serial.begin(9600);
+    WiFi.forceSleepBegin();
     pinMode(TFT_CS, OUTPUT);
     pinMode(RTC_CS, OUTPUT);
+    pinMode(TFT_LED, OUTPUT);
+    pinMode(PWR_UP_PIN, INPUT);
 
     digitalWrite(TFT_CS, HIGH);
     digitalWrite(RTC_CS, HIGH);
+    pinMode(TFT_LED, LOW);
 
     Tft.begin();
-    Tft.setBacklightBrightness(TFT_BRIGHTNESS);
     Tft.clear();
     Tft.setOrientation(1);
     Tft.setFont(Terminal6x8);
@@ -25,13 +28,13 @@ void setup() {
         Tft.setDisplay(false);
         ESP.restart();
     }
-    DiveStartTime = ReadRTC();
+    DecoActual.AddGas(0,1,0);
 }
 
 void loop() {
     PollButtons();
 
     UIData data = CollectData();
-    ShowDiveScreen(data);
+    UpdateUI(data);
 
 }

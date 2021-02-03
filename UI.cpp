@@ -3,13 +3,64 @@
 //
 #include "UI.h"
 
-bool ShowingDiveScreen = false;
-bool ShowingSurfaceScreen = false;
-
+// UI Elements
 Bar DiveTimeBar = {.OriginX=COLUMN_2, .OriginY=ROW_1 +
                                                10, .Length=28, .Thickness=2, .Vertical=false, .Color=COLOR_WHITE, .MaxValue=1, .EndStop=true};
 Bar TimeBar = {.OriginX=COLUMN_4 + 18, .OriginY=ROW_4 + VAL_OFFSET +
                                                 15, .Length=15, .Thickness=2, .Vertical=true, .Color=COLOR_WHITE, .MaxValue=60, .EndStop=true};
+
+// Menu Items
+MenuItem MenuSwitchGas = MenuItem("Switch Gas", &SwitchGasCallback, true);
+MenuItem MenuEndDive = MenuItem("End Dive", &EndDiveCallback, true);
+MenuItem MenuTurnOff = MenuItem("Turn Off", &TurnOffCallback, true);
+MenuItem MenuStartWeb = MenuItem("Start Web", &StartWebCallback, true);
+MenuItem MenuStartDive = MenuItem("Start Dive", &StartDiveCallback, true);
+
+// Menu Structure
+MenuItem SurfaceItems[] = {MenuSwitchGas, MenuStartDive, MenuStartWeb, MenuTurnOff};
+MenuItem DiveItems[] = {MenuSwitchGas, MenuEndDive};
+MenuItem GasItems[MAX_GAS_COUNT] = {};
+
+Menu SurfaceMenu = Menu(SurfaceItems,4,0);
+Menu DiveMenu = Menu(DiveItems,2,0);
+Menu GasMenu = Menu(GasItems,MAX_GAS_COUNT, 0);
+
+// Stage
+UIState CurrUIState = {.Mode=SURFACE,.InMenu=false,.Menu=&SurfaceMenu,.ClearNeeded=true};
+
+void UpdateUI(UIData data)
+{
+    if(CurrUIState.ClearNeeded)
+    {
+        Tft.clear();
+        CurrUIState.ClearNeeded = false;
+    }
+    if (CurrUIState.Mode == DIVE) {
+        if(CurrUIState.InMenu){
+            ShowDiveTopRow(data);
+            ShowBottomRow(data);
+            ShowMenu(*CurrUIState.Menu);
+        }
+        else {
+            ShowDiveScreen(data);
+        }
+    }
+    else if (CurrUIState.Mode == SURFACE)
+    {
+        if(CurrUIState.InMenu){
+            ShowBottomRow(data);
+            ShowMenu(*CurrUIState.Menu);
+        }
+        else {
+            ShowSurfaceScreen(data);
+        }
+    }
+}
+
+void ShowMenu(Menu menu) {
+    Tft.setFont(Terminal12x16);
+    Tft.drawText(COLUMN_1, ROW_2, menu.Items[menu.CurrIndex].MenuText);
+}
 
 void ShowBar(Bar bar, double value) {
     int EndX, EndY, ValX, ValY;
@@ -102,11 +153,6 @@ void ShowBottomRow(UIData data) {
 }
 
 void ShowSurfaceScreen(UIData data) {
-    if (!ShowingSurfaceScreen) {
-        Tft.clear();
-    }
-    ShowingSurfaceScreen = true;
-    ShowingDiveScreen = false;
     ShowBottomRow(data);
     Tft.setFont(Terminal6x8);
     Tft.drawText(COLUMN_1, ROW_1, "Surface Pressure");
@@ -135,11 +181,7 @@ void ShowSurfaceScreen(UIData data) {
 }
 
 void ShowDiveScreen(UIData data) {
-    if (!ShowingDiveScreen) {
-        Tft.clear();
-    }
-    ShowingDiveScreen = true;
-    ShowingSurfaceScreen = false;
+    CurrUIState.ClearNeeded = false;
 
     ShowDiveTopRow(data);
     ShowBottomRow(data);
@@ -160,8 +202,6 @@ void ShowDiveScreen(UIData data) {
 
     // Draw Numbers
     Tft.setFont(Terminal11x16);
-
-
     // Temp
     char temp[7];
     sprintf(temp, "%4.1f", data.Temperature);
@@ -306,8 +346,103 @@ bool SelfTest() {
 
 void ButtonOne() {
     Serial.println("Button 1");
+    if(CurrUIState.InMenu)
+    {
+        CurrUIState.Menu->CurrIndex += 1;
+        if(CurrUIState.Menu->CurrIndex >= CurrUIState.Menu->ItemsSize)
+        {
+            CurrUIState.InMenu=false;
+            CurrUIState.Menu->CurrIndex=0;
+            CurrUIState.ClearNeeded = true;
+        }
+    }
+    else
+    {
+        CurrUIState.InMenu=true;
+        CurrUIState.ClearNeeded = true;
+    }
 }
 
 void ButtonTwo() {
     Serial.println("Button 2");
+    if(CurrUIState.InMenu)
+    {
+        CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex].Callback(CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex]);
+    }
 }
+
+void SwitchGasCallback(MenuItem item) {
+    GasMenu.ItemsSize = DecoActual.Gases.size();
+    for(int i=0; i < DecoActual.Gases.size() && i < GasMenu.ItemsSize; i++)
+    {
+        char *gas = (char*)malloc(sizeof(char)*20);
+        sprintf(gas, "%02.0f/%02.0f", DecoActual.Gases[i].FrO2 * 100, DecoActual.Gases[i].FrHe * 100);
+
+        GasMenu.Items[i].MenuText=gas;
+        GasMenu.Items[i].Callback=&GasMenuCallback;
+        GasMenu.Items[i].Enabled = true;
+    }
+    CurrUIState.Menu = &GasMenu;
+    CurrUIState.ClearNeeded = true;
+}
+
+void GasMenuCallback(MenuItem item)
+{
+    double FrO2, FrHe;
+
+    sscanf(item.MenuText,"%lf/%lf", &FrO2, &FrHe);
+
+    for(int i=0; i < DecoActual.Gases.size(); i++)
+    {
+        if(DecoActual.Gases[i].FrO2*100 == FrO2 && DecoActual.Gases[i].FrHe == FrHe)
+        {
+            DecoActual.SwitchGas(i);
+        }
+    }
+
+    for(int i=0; i < GasMenu.ItemsSize; i++)
+    {
+        free(GasMenu.Items[i].MenuText);
+    }
+
+    CurrUIState.InMenu= false;
+    GasMenu.CurrIndex = 0;
+    CurrUIState.ClearNeeded = true;
+    if(CurrUIState.Mode==DIVE)
+    {
+        CurrUIState.Menu=&DiveMenu;
+    }
+    else if (CurrUIState.Mode == SURFACE)
+    {
+        CurrUIState.Menu=&SurfaceMenu;
+    }
+}
+
+void EndDiveCallback(MenuItem item) {
+    CurrUIState.Mode = SURFACE;
+    CurrUIState.ClearNeeded = true;
+    CurrUIState.ClearNeeded = true;
+    CurrUIState.Menu->CurrIndex=0;
+    CurrUIState.Menu = &SurfaceMenu;
+    CurrUIState.InMenu = false;
+    EndDive();
+}
+
+void TurnOffCallback(MenuItem item) {
+    TurnOff();
+}
+
+void StartWebCallback(MenuItem item) {
+
+}
+
+void StartDiveCallback(MenuItem item) {
+    CurrUIState.Mode = DIVE;
+    CurrUIState.ClearNeeded = true;
+    CurrUIState.Menu->CurrIndex=0;
+    CurrUIState.Menu = &DiveMenu;
+    CurrUIState.InMenu = false;
+    StartDive();
+}
+
+MenuItem::MenuItem() = default;

@@ -69,3 +69,11 @@ double GetTTS(const std::vector<Deco::DecoStop> &schedule) {
     }
     return tts;
 }
+
+void StartDive() {
+    DiveStartTime = ReadRTC();
+}
+
+void EndDive() {
+
+}
