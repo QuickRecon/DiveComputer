@@ -11,7 +11,7 @@ void setup() {
     pinMode(TFT_CS, OUTPUT);
     pinMode(RTC_CS, OUTPUT);
     pinMode(TFT_LED, OUTPUT);
-    pinMode(PWR_UP_PIN, INPUT);
+    //pinMode(PWR_UP_PIN, INPUT);
 
     digitalWrite(TFT_CS, HIGH);
     digitalWrite(RTC_CS, HIGH);

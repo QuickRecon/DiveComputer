@@ -126,7 +126,7 @@ UIData CollectData() {
 
     screenData.AverageDepth = AverageDepth;
 
-    screenData.CNS = CNSPercent;
+    screenData.CNS = CNS;
 
     screenData.DiveTime = TimeDiff(ReadRTC(), DiveStartTime);
 
@@ -162,6 +162,7 @@ void TurnOff(){
     wifi_fpm_open(); // Enables force sleep
     gpio_pin_wakeup_enable(GPIO_ID_PIN(PWR_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO_ID_PIN(2) corresponds to GPIO2 on ESP8266-01 , GPIO_PIN_INTR_LOLEVEL for a logic low, can also do other interrupts, see gpio.h above
     wifi_fpm_do_sleep(0xFFFFFFF); // Sleep for longest possible time
-    // Be asleep
+    delay(500);
+    // Be Asleep
     ESP.restart(); //On Wake restart
 }

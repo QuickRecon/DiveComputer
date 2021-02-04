@@ -322,13 +322,13 @@ bool SelfTest() {
     }
     textRow += 15;
     Tft.drawText(10, textRow, "File System...");
-    if (!LittleFS.begin()) {
+    FSInfo fs_info{};
+    if (!InitFS(fs_info)) {
         Tft.drawText(130, textRow, "ERR", COLOR_RED);
         pass = false;
     } else {
         Tft.drawText(130, textRow, "OK", COLOR_GREEN);
         char space[10];
-        FSInfo fs_info{};
         LittleFS.info(fs_info);
         sprintf(space, "%zuk/%zuk", fs_info.usedBytes / 1024, fs_info.totalBytes / 1024);
         Tft.drawText(150, textRow, space, COLOR_WHITE);

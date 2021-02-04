@@ -17,7 +17,7 @@
 #include "MS5837.h"
 #include <Wire.h>
 #include <SPI.h>
-#include "LittleFS.h"
+#include "FSInterface.h"
 #include <ESP8266WiFi.h>
 extern "C" {
     #include "user_interface.h"

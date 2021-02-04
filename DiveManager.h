@@ -12,9 +12,15 @@
 #define ASCENT_RATE 10
 #define DESCENT_RATE 30
 
+#define DATA_SAMPLE_RATE 0.5 // Time in seconds
+#define ALGO_UPDATE_RATE 5
+
+extern double CNSSlopes[];
+extern double CNSIntercepts[];
+
 struct RealTime;
 
-extern double CNSPercent;
+extern double CNS;
 extern double OTUs;
 extern double AverageDepth;
 extern double LastDepth;
