@@ -161,6 +161,9 @@ void ShowSurfaceScreen(UIData data) {
     Tft.drawText((COLUMN_1 + COLUMN_2) / 2 - 10, ROW_2, "GFL/GFH");
     Tft.drawText((COLUMN_1 + COLUMN_2) / 2, ROW_3, "CNS");
 
+    Tft.drawText(COLUMN_3, ROW_2, "L Dpth");
+    Tft.drawText(COLUMN_4, ROW_2, "Bat V.");
+    Tft.drawText(COLUMN_3, ROW_3, "L Time");
 
     Tft.setFont(Terminal11x16);
     char pressure[10];
@@ -178,6 +181,10 @@ void ShowSurfaceScreen(UIData data) {
     char cns[7];
     sprintf(cns, "%02.0f", data.CNS);
     Tft.drawText((COLUMN_1 + COLUMN_2) / 2, ROW_3 + VAL_OFFSET, cns);
+
+    char battery[7];
+    sprintf(battery, "%.2fV", ReadBatteryVoltage());
+    Tft.drawText(COLUMN_4, ROW_2 + VAL_OFFSET, battery);
 }
 
 void ShowDiveScreen(UIData data) {
@@ -345,7 +352,7 @@ bool SelfTest() {
 }
 
 void ButtonOne() {
-    Serial.println("Button 1");
+    //Serial.println("Button 1");
     if(CurrUIState.InMenu)
     {
         CurrUIState.Menu->CurrIndex += 1;
@@ -364,7 +371,7 @@ void ButtonOne() {
 }
 
 void ButtonTwo() {
-    Serial.println("Button 2");
+    //Serial.println("Button 2");
     if(CurrUIState.InMenu)
     {
         CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex].Callback(CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex]);

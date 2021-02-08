@@ -7,6 +7,7 @@
 
 #include "HWInterface.h"
 #include "DiveManager.h"
+#include "FSInterface.h"
 
 #define ROW_1 10
 #define ROW_2 50

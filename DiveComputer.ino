@@ -6,16 +6,16 @@ void ResetWatchdog() {
 }
 
 void setup() {
-    Serial.begin(9600);
-    WiFi.forceSleepBegin();
+    //WiFi.forceSleepBegin();
     pinMode(TFT_CS, OUTPUT);
     pinMode(RTC_CS, OUTPUT);
     pinMode(TFT_LED, OUTPUT);
-    //pinMode(PWR_UP_PIN, INPUT);
+    pinMode(TFT_RST, OUTPUT);
+    pinMode(PWR_UP_PIN, INPUT);
 
     digitalWrite(TFT_CS, HIGH);
     digitalWrite(RTC_CS, HIGH);
-    pinMode(TFT_LED, LOW);
+    digitalWrite(TFT_LED, HIGH);
 
     Tft.begin();
     Tft.clear();
@@ -28,6 +28,7 @@ void setup() {
         Tft.setDisplay(false);
         ESP.restart();
     }
+
     DecoActual.AddGas(0,1,0);
 }
 

@@ -34,18 +34,21 @@ extern "C" {
 #define BUTTON_2_CHANNEL 2
 
 // TFT Params
-#define TFT_RST 0   // D3
+#define TFT_RST 3   // D3
 #define TFT_RS  16   // D0
 #define TFT_CS  2  // D8 SS
-#define TFT_LED 3  // D4     set 0 if wired to +5V directly -> D3=0 is not possible !!
+#define TFT_LED 1  // D4     set 0 if wired to +5V directly -> D3=0 is not possible !!
 
+// ADC Params
+#define ADC_1_V_PER_BIT 0.000188
 
 // RTC Params
 #define RTC_CS 15
 #define SET_CLOCK 0
 
 // Misc Params
-#define PWR_UP_PIN 1
+#define PWR_UP_PIN 0
+#define BATTERY_CHANNEL 1
 
 struct RealTime;
 
@@ -90,5 +93,7 @@ void PollButtons();
 UIData CollectData();
 
 void TurnOff();
+
+double ReadBatteryVoltage();
 
 #endif //DIVECOMPUTER_HWINTERFACE_H

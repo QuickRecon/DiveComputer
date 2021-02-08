@@ -21,8 +21,8 @@ QR_ADS1115 Adc2 = QR_ADS1115(0x48);
 // Depth Sensor Params
 MS5837 DepthSensor;
 
-// Use hardware SPI (faster - on Uno: 13-SCK, 12-MISO, 11-MOSI)
 TFT_22_ILI9225 Tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, 0, 255);
+//TFT_22_ILI9225 Tft  = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_SDI, TFT_CLK, TFT_LED, 255);
 
 
 bool InitRTC() {
@@ -69,13 +69,13 @@ void PollButtons() {
     button1Val = Adc1.readADC_SingleEnded(BUTTON_1_CHANNEL); // Button 1 on left
     button2Val = Adc1.readADC_SingleEnded(BUTTON_2_CHANNEL); // Button 2 on right
 
-    Serial.print("Button 1: ");
-    Serial.println(button1Val);
-    Serial.print("Button 2: ");
-    Serial.println(button2Val);
+    //Serial.print("Button 1: ");
+    //Serial.println(button1Val);
+    //Serial.print("Button 2: ");
+    //Serial.println(button2Val);
 
-    bool button1 = button1Val > LastButton1Val + BUTTON_THRESHOLD;
-    bool button2 = button2Val > LastButton2Val + BUTTON_THRESHOLD;
+    bool button1 = button1Val < LastButton1Val - BUTTON_THRESHOLD;
+    bool button2 = button2Val < LastButton2Val - BUTTON_THRESHOLD;
 
     LastButton1Val = button1Val;
     LastButton2Val = button2Val;
@@ -151,18 +151,27 @@ UIData CollectData() {
 
 void TurnOff(){
     //Serial.println("Turning off");
-    pinMode(TFT_LED, HIGH);
+    digitalWrite(TFT_LED, LOW);
     Tft.setDisplay(false);
     Adc1.startComparator_SingleEnded(BUTTON_1_CHANNEL, LastButton1Val+100);
 
 
     wifi_station_disconnect();
     wifi_set_opmode_current(NULL_MODE);
-    wifi_fpm_set_sleep_type(LIGHT_SLEEP_T); // set sleep type, the above    posters wifi_set_sleep_type() didnt seem to work for me although it did let me compile and upload with no errors
+    wifi_fpm_set_sleep_type(
+            LIGHT_SLEEP_T); // set sleep type, the above    posters wifi_set_sleep_type() didnt seem to work for me although it did let me compile and upload with no errors
     wifi_fpm_open(); // Enables force sleep
-    gpio_pin_wakeup_enable(GPIO_ID_PIN(PWR_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO_ID_PIN(2) corresponds to GPIO2 on ESP8266-01 , GPIO_PIN_INTR_LOLEVEL for a logic low, can also do other interrupts, see gpio.h above
+    gpio_pin_wakeup_enable(GPIO_ID_PIN(PWR_UP_PIN),
+                           GPIO_PIN_INTR_LOLEVEL); // GPIO_ID_PIN(2) corresponds to GPIO2 on ESP8266-01 , GPIO_PIN_INTR_LOLEVEL for a logic low, can also do other interrupts, see gpio.h above
     wifi_fpm_do_sleep(0xFFFFFFF); // Sleep for longest possible time
     delay(500);
     // Be Asleep
     ESP.restart(); //On Wake restart
+}
+
+double ReadBatteryVoltage() {
+    int16_t batteryVal;
+    batteryVal = Adc1.readADC_SingleEnded(BATTERY_CHANNEL);
+
+    return ((double) batteryVal) * ADC_1_V_PER_BIT;
 }

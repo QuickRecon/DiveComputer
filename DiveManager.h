@@ -8,6 +8,7 @@
 #include <Deco.h>
 #include "DiveComputer.h"
 #include "HWInterface.h"
+#include "FSInterface.h"
 
 #define ASCENT_RATE 10
 #define DESCENT_RATE 30
