@@ -81,7 +81,7 @@ void PollButtons() {
     LastButton2Val = button2Val;
 
     if (button1 && button2) {
-        if (button1Val > button2Val) {
+        if (button1Val < button2Val) {
             ButtonOne();
         } else {
             ButtonTwo();

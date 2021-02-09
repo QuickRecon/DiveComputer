@@ -21,7 +21,7 @@ void setup() {
     Tft.clear();
     Tft.setOrientation(1);
     Tft.setFont(Terminal6x8);
-
+    Serial.begin(9600);
     bool pass = SelfTest();
     delay(2000); // Let some time for the user to look at the self test
     if (!pass) {
@@ -29,7 +29,7 @@ void setup() {
         ESP.restart();
     }
 
-    DecoActual.AddGas(0,1,0);
+    //DecoActual.AddGas(0,1,0);
 }
 
 void loop() {

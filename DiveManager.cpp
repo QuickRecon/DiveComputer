@@ -92,7 +92,6 @@ void AddO2Exposure(double PPO2, double time) { // Use rectangular approximation
 
 double GetTTS(const std::vector<Deco::DecoStop> &schedule) {
     double tts = 0;
-    double lastDepth = LastDepth;
     if (!schedule.empty()) {
         for (auto &i : schedule) {
             tts += (LastDepth - i.Depth) / ASCENT_RATE; // Add time to ascend to stop
@@ -106,8 +105,9 @@ double GetTTS(const std::vector<Deco::DecoStop> &schedule) {
 
 void StartDive() {
     DiveStartTime = ReadRTC();
+    OpenDiveLog();
 }
 
 void EndDive() {
-
+    CloseDiveLog();
 }
