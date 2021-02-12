@@ -16,7 +16,7 @@
 
 #define MAX_GAS_COUNT 10
 
-#define FORCE_RESET
+//#define FORCE_RESET
 
 struct UIData;
 struct CompassCalibrationCoefficients;

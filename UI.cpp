@@ -316,12 +316,14 @@ bool SelfTest() {
     Tft.drawText(10, textRow, "ADC1...");
     Adc1.begin();
     Adc1.setGain(GAIN_TWOTHIRDS);
+    Adc1.getLastConversionResults();
     Tft.drawText(130, textRow, "OK", COLOR_GREEN);
 
     textRow += 15;
     Tft.drawText(10, textRow, "ADC2...");
     Adc2.begin();
     Adc2.setGain(GAIN_TWOTHIRDS);
+    Adc2.getLastConversionResults();
     Tft.drawText(130, textRow, "OK", COLOR_GREEN);
 
     textRow += 15;
@@ -386,7 +388,7 @@ void NextMenuItem() {
     {
         NextMenuItem();
     } else {
-        Tft.fillRectangle(COLUMN_1, ROW_2, COLUMN_4, ROW_3, COLOR_BLACK); // Clear prior menu item
+        Tft.fillRectangle(COLUMN_1, ROW_2, Tft.maxX(), ROW_3, COLOR_BLACK); // Clear prior menu item
         ShowMenu(*CurrUIState.Menu);
     }
 }

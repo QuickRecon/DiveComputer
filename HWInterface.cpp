@@ -3,8 +3,8 @@
 //
 #include "HWInterface.h"
 
-double LastButton1Val = 0;
-double LastButton2Val = 0;
+double LastButton1Val = -1000;
+double LastButton2Val = -1000;
 
 // Accelerometer Params
 Adafruit_LSM303_Accel_Unified Accel = Adafruit_LSM303_Accel_Unified(54321);
@@ -155,12 +155,13 @@ UIData CollectData() {
     return screenData;
 }
 
-void TurnOff(){
+void TurnOff() {
     //Serial.println("Turning off");
     digitalWrite(TFT_LED, LOW);
     Tft.setDisplay(false);
-    Adc1.startComparator_SingleEnded(BUTTON_1_CHANNEL, LastButton1Val + 500);
-
+    Adc1.startWindowComparator_SingleEnded(BUTTON_1_CHANNEL, (int) ceilf(3.3 / ADC_1_V_PER_BIT),
+                                           LastButton1Val - BUTTON_THRESHOLD);
+    delay(1000);
 
     wifi_station_disconnect();
     wifi_set_opmode_current(NULL_MODE);

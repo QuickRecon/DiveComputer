@@ -169,7 +169,9 @@ Settings ReadSettingsFile() {
         } else {
             // Process line
             char *propertyName = strtok(line, &settingDelimiter);
-            if (strcmp(propertyName, "GFHigh") == 0) {
+            if (strcmp(propertyName, "GFHi") == 0) {
+                strtok(nullptr,
+                       &settingDelimiter); // Flush the next item in the buffer, for some reason g is triggering strtok
                 char *GFHigh = strtok(nullptr, &settingDelimiter);
                 settings.GFHigh = strtod(GFHigh, &GFHigh);
             } else if (strcmp(propertyName, "GFLow") == 0) {
