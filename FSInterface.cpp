@@ -10,8 +10,6 @@ bool InitFS(FSInfo &fsInfo) {
     bool status = LittleFS.begin();
 
 #ifdef FORCE_RESET
-    LittleFS.mkdir(DIVE_LOG_PATH);
-
     Settings settings = GenerateSettings();
     WriteSettingsFile(settings);
     settings = ReadSettingsFile();
@@ -36,36 +34,51 @@ bool InitFS(FSInfo &fsInfo) {
 
 void WriteSettingsFile(Settings settings) {
     File settingsFile = LittleFS.open(SETTINGS_PATH, "w");
+    char stringBuffer[100];
 
-    char GFHigh[255];
-    sprintf(GFHigh, "GFHigh:%f", settings.GFHigh);
-    settingsFile.println(GFHigh);
+    sprintf(stringBuffer, "GFHigh:%16.15f", settings.GFHigh);
+    settingsFile.println(stringBuffer);
 
-    char GFLow[255];
-    sprintf(GFLow, "GFLow:%f", settings.GFLow);
-    settingsFile.println(GFLow);
+    sprintf(stringBuffer, "GFLow:%16.15f", settings.GFLow);
+    settingsFile.println(stringBuffer);
 
-    char waterDensity[255];
-    sprintf(waterDensity, "WaterDensity:%f", settings.WaterDensity);
-    settingsFile.println(waterDensity);
+    sprintf(stringBuffer, "WaterDensity:%16.15f", settings.WaterDensity);
+    settingsFile.println(stringBuffer);
 
     for (int i = 0; i < settings.GasCount; i++) {
-        char gas[255];
-        sprintf(gas, "Gas:%d:%02.0f/%02.0f", i, settings.Gases[i].FrO2 * 100, settings.Gases[i].FrHe * 100);
-        settingsFile.println(gas);
+        sprintf(stringBuffer, "Gas:%d:%02.0f/%02.0f", i, settings.Gases[i].FrO2 * 100, settings.Gases[i].FrHe * 100);
+        settingsFile.println(stringBuffer);
     }
 
     for (int i = 0; i < 16; i++) {
-        char tissue[255];
-        sprintf(tissue, "TissueN2:%d:%f", i, settings.TissueN2[i]);
-        settingsFile.println(tissue);
+        sprintf(stringBuffer, "TissueN2:%d:%16.15f", i, settings.TissueN2[i]);
+        settingsFile.println(stringBuffer);
     }
 
     for (int i = 0; i < 16; i++) {
-        char tissue[255];
-        sprintf(tissue, "TissueHe:%d:%f", i, settings.TissueHe[i]);
-        settingsFile.println(tissue);
+        sprintf(stringBuffer, "TissueHe:%d:%16.15f", i, settings.TissueHe[i]);
+        settingsFile.println(stringBuffer);
     }
+
+    sprintf(stringBuffer, "Time:%04d-%02d-%02d %02d-%02d-%02d", settings.Time.Year, settings.Time.Month,
+            settings.Time.Day, settings.Time.Hour, settings.Time.Minute,
+            settings.Time.Second);
+    settingsFile.println(stringBuffer);
+
+
+    sprintf(stringBuffer, "LastDive:%16.15f:%16.15f", settings.LastTime, settings.LastDepth);
+    settingsFile.println(stringBuffer);
+
+    sprintf(stringBuffer, "CNS:%16.15f", settings.CNS);
+    settingsFile.println(stringBuffer);
+
+    sprintf(stringBuffer, "OTU:%16.15f", settings.CNS);
+    settingsFile.println(stringBuffer);
+
+    sprintf(stringBuffer, "Compass:%16.15f:%16.15f:%16.15f", settings.CompassCalX, settings.CompassCalY,
+            settings.CompassCalZ);
+    settingsFile.println(stringBuffer);
+
     settingsFile.close();
 }
 
@@ -74,6 +87,12 @@ Settings GenerateSettings() {
     settings.GFHigh = DecoActual.GFHigh;
     settings.GFLow = DecoActual.GFLow;
     settings.WaterDensity = WaterDensity;
+    settings.CNS = CNS;
+    settings.OTU = OTUs;
+
+    settings.CompassCalX = CompassCalibration.x;
+    settings.CompassCalY = CompassCalibration.y;
+    settings.CompassCalZ = CompassCalibration.z;
 
     for (int i = 0; i < DecoActual.Gases.size() && i < MAX_GAS_COUNT; i++) {
         settings.GasCount = i + 1;
@@ -90,6 +109,11 @@ Settings GenerateSettings() {
         settings.TissueHe[i] = DecoActual.Ph[i];
     }
 
+    settings.Time = ReadRTC();
+
+    settings.LastDepth = LastDiveDepth;
+    settings.LastTime = LastDiveTime;
+
     return settings;
 }
 
@@ -97,8 +121,17 @@ void ApplySettings(Settings settings) {
     DecoActual.GFHigh = settings.GFHigh;
     DecoActual.GFLow = settings.GFLow;
     WaterDensity = settings.WaterDensity;
+    LastDiveDepth = settings.LastDepth;
+    LastDiveTime = settings.LastTime;
+    CNS = settings.CNS;
+    OTUs = settings.OTU;
+
+    CompassCalibration.x = settings.CompassCalX;
+    CompassCalibration.y = settings.CompassCalY;
+    CompassCalibration.z = settings.CompassCalZ;
 
     DecoActual.Gases.clear();
+    DecoActual.AddDecent(1, ASCENT_RATE); // Set the depth to 1
     for (int i = 0; i < settings.GasCount; i++) {
         DecoActual.AddGas(settings.Gases[i].FrN2, settings.Gases[i].FrO2, settings.Gases->FrHe);
     }
@@ -110,6 +143,12 @@ void ApplySettings(Settings settings) {
     for (int i = 0; i < 16; i++) {
         DecoActual.Ph[i] = settings.TissueHe[i];
     }
+
+    // Propagate the tissues forward in Time
+    double diff = TimeDiff(ReadRTC(), settings.Time);
+    DecoActual.AddDecent(1, DESCENT_RATE);
+    DecoActual.AddBottom(diff);
+    DecayO2Exposure(diff);
 }
 
 Settings ReadSettingsFile() {
@@ -136,6 +175,12 @@ Settings ReadSettingsFile() {
             } else if (strcmp(propertyName, "GFLow") == 0) {
                 char *GFLow = strtok(nullptr, &settingDelimiter);
                 settings.GFLow = strtod(GFLow, &GFLow);
+            } else if (strcmp(propertyName, "CNS") == 0) {
+                char *cns = strtok(nullptr, &settingDelimiter);
+                settings.CNS = strtod(cns, &cns);
+            } else if (strcmp(propertyName, "OTU") == 0) {
+                char *otu = strtok(nullptr, &settingDelimiter);
+                settings.OTU = strtod(otu, &otu);
             } else if (strcmp(propertyName, "WaterDensity") == 0) {
                 char *waterDensity = strtok(nullptr, &settingDelimiter);
                 settings.WaterDensity = strtod(waterDensity, &waterDensity);
@@ -169,8 +214,24 @@ Settings ReadSettingsFile() {
                 double tissue = strtod(TissueString, &TissueString);
 
                 settings.TissueHe[TissueIndex] = tissue;
-            }
+            } else if (strcmp(propertyName, "Time") == 0) {
+                char *time = strtok(nullptr, &settingDelimiter);
+                sscanf(time, "%d-%d-%d %d-%d-%d", &settings.Time.Year, &settings.Time.Month,
+                       &settings.Time.Day, &settings.Time.Hour, &settings.Time.Minute, &settings.Time.Second);
+            } else if (strcmp(propertyName, "LastDive") == 0) {
+                char *LastTime = strtok(nullptr, &settingDelimiter);
+                settings.LastTime = strtod(LastTime, &LastTime);
+                char *lastDepth = strtok(nullptr, &settingDelimiter);
+                settings.LastTime = strtod(lastDepth, &lastDepth);
+            } else if (strcmp(propertyName, "Compass") == 0) {
+                char *x = strtok(nullptr, &settingDelimiter);
+                char *y = strtok(nullptr, &settingDelimiter);
+                char *z = strtok(nullptr, &settingDelimiter);
 
+                settings.CompassCalX = (float) strtod(x, &x);
+                settings.CompassCalY = (float) strtod(y, &y);
+                settings.CompassCalZ = (float) strtod(z, &z);
+            }
             // nuke line
             line[0] = '\0';
             i = 0;
@@ -190,7 +251,7 @@ void OpenDiveLog() {
     strcat(filename, dateTime);
 
     CurrDiveLog = LittleFS.open(filename, "w");
-    CurrDiveLog.println(R"lit("date","time","sample time (min)","sample depth (m)","sample temperature (C)")lit");
+    CurrDiveLog.println(R"lit("date","Time","sample Time (min)","sample depth (m)","sample temperature (C)")lit");
     sprintf(SampleStartText, "%04d-%02d-%02d,%02d:%02d:%02d", time.Year, time.Month, time.Day, time.Hour, time.Minute,
             time.Second);
 }

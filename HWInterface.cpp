@@ -3,14 +3,15 @@
 //
 #include "HWInterface.h"
 
-double LastButton1Val = 1000;
-double LastButton2Val = 1000;
+double LastButton1Val = 0;
+double LastButton2Val = 0;
 
 // Accelerometer Params
 Adafruit_LSM303_Accel_Unified Accel = Adafruit_LSM303_Accel_Unified(54321);
 
 // Magnetometer Params
 Adafruit_LSM303DLH_Mag_Unified Mag = Adafruit_LSM303DLH_Mag_Unified(12345);
+CompassCalibrationCoefficients CompassCalibration{0, 0, 0};
 
 // ADC1 Params
 QR_ADS1115 Adc1 = QR_ADS1115(0x49);
@@ -81,7 +82,7 @@ void PollButtons() {
     LastButton2Val = button2Val;
 
     if (button1 && button2) {
-        if (button1Val < button2Val) {
+        if (fabs(LastButton1Val - button1Val) > fabs(LastButton2Val - button2Val)) {
             ButtonOne();
         } else {
             ButtonTwo();
@@ -97,10 +98,15 @@ double ReadHeading() {
     sensors_event_t event;
     Mag.getEvent(&event);
 
+    double x = event.magnetic.x - CompassCalibration.x;
+    double y = event.magnetic.y - CompassCalibration.y;
+    double z = event.magnetic.z - CompassCalibration.z;
+
+
     double Pi = 3.14159;
 
     // Calculate the angle of the vector y,x
-    double heading = (atan2(event.magnetic.z, event.magnetic.x) * 180) / Pi;
+    double heading = (atan2(z, x) * 180) / Pi;
 
     // Normalize to 0-360
     if (heading < 0) {
@@ -153,7 +159,7 @@ void TurnOff(){
     //Serial.println("Turning off");
     digitalWrite(TFT_LED, LOW);
     Tft.setDisplay(false);
-    Adc1.startComparator_SingleEnded(BUTTON_1_CHANNEL, LastButton1Val+100);
+    Adc1.startComparator_SingleEnded(BUTTON_1_CHANNEL, LastButton1Val + 500);
 
 
     wifi_station_disconnect();
@@ -163,7 +169,7 @@ void TurnOff(){
     wifi_fpm_open(); // Enables force sleep
     gpio_pin_wakeup_enable(GPIO_ID_PIN(PWR_UP_PIN),
                            GPIO_PIN_INTR_LOLEVEL); // GPIO_ID_PIN(2) corresponds to GPIO2 on ESP8266-01 , GPIO_PIN_INTR_LOLEVEL for a logic low, can also do other interrupts, see gpio.h above
-    wifi_fpm_do_sleep(0xFFFFFFF); // Sleep for longest possible time
+    wifi_fpm_do_sleep(0xFFFFFFF); // Sleep for longest possible Time
     delay(500);
     // Be Asleep
     ESP.restart(); //On Wake restart
@@ -173,5 +179,5 @@ double ReadBatteryVoltage() {
     int16_t batteryVal;
     batteryVal = Adc1.readADC_SingleEnded(BATTERY_CHANNEL);
 
-    return ((double) batteryVal) * ADC_1_V_PER_BIT;
+    return ((double) batteryVal) * ADC_1_V_PER_BIT * 2; // 1/2 voltage divider on battery
 }

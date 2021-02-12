@@ -15,14 +15,15 @@ MenuItem MenuEndDive = MenuItem("End Dive", &EndDiveCallback, true);
 MenuItem MenuTurnOff = MenuItem("Turn Off", &TurnOffCallback, true);
 MenuItem MenuStartWeb = MenuItem("Start Web", &StartWebCallback, true);
 MenuItem MenuStartDive = MenuItem("Start Dive", &StartDiveCallback, true);
+MenuItem CalibrateCompass = MenuItem("Calibrate Compass", &CalibrateCompassCallback, true);
 
 // Menu Structure
-MenuItem SurfaceItems[] = {MenuSwitchGas, MenuStartDive, MenuStartWeb, MenuTurnOff};
+MenuItem SurfaceItems[] = {MenuSwitchGas, MenuStartDive, MenuStartWeb, CalibrateCompass, MenuTurnOff};
 MenuItem DiveItems[] = {MenuSwitchGas, MenuEndDive};
 MenuItem GasItems[MAX_GAS_COUNT] = {};
 
-Menu SurfaceMenu = Menu(SurfaceItems,4,0);
-Menu DiveMenu = Menu(DiveItems,2,0);
+Menu SurfaceMenu = Menu(SurfaceItems, 5, 0);
+Menu DiveMenu = Menu(DiveItems, 2, 0);
 Menu GasMenu = Menu(GasItems,MAX_GAS_COUNT, 0);
 
 // Stage
@@ -44,16 +45,20 @@ void UpdateUI(UIData data)
         else {
             ShowDiveScreen(data);
         }
-    }
-    else if (CurrUIState.Mode == SURFACE)
-    {
-        if(CurrUIState.InMenu){
+    } else if (CurrUIState.Mode == SURFACE) {
+        if (CurrUIState.InMenu) {
             ShowBottomRow(data);
             ShowMenu(*CurrUIState.Menu);
-        }
-        else {
+        } else {
             ShowSurfaceScreen(data);
         }
+    }
+
+    // Lock out end dive when below 1m
+    if (data.Depth > 1.0 && MenuEndDive.Enabled) {
+        MenuEndDive.Enabled = false;
+    } else if (!MenuEndDive.Enabled) {
+        MenuEndDive.Enabled = true;
     }
 }
 
@@ -164,6 +169,7 @@ void ShowSurfaceScreen(UIData data) {
     Tft.drawText(COLUMN_3, ROW_2, "L Dpth");
     Tft.drawText(COLUMN_4, ROW_2, "Bat V.");
     Tft.drawText(COLUMN_3, ROW_3, "L Time");
+    Tft.drawText(COLUMN_4, ROW_3, "Head.");
 
     Tft.setFont(Terminal11x16);
     char pressure[10];
@@ -185,6 +191,19 @@ void ShowSurfaceScreen(UIData data) {
     char battery[7];
     sprintf(battery, "%.2fV", ReadBatteryVoltage());
     Tft.drawText(COLUMN_4, ROW_2 + VAL_OFFSET, battery);
+
+    char lastDiveDepth[7];
+    sprintf(lastDiveDepth, "%04.1f", LastDiveDepth);
+    Tft.drawText(COLUMN_3, ROW_2 + VAL_OFFSET, lastDiveDepth);
+
+    char LastTime[7];
+    sprintf(LastTime, "%.0f", floor(LastDiveTime));
+    Tft.drawText(COLUMN_3, ROW_3 + VAL_OFFSET, LastTime);
+
+    // heading
+    char heading[7];
+    sprintf(heading, "%03.0f", data.Heading);
+    Tft.drawText(COLUMN_4, ROW_3 + VAL_OFFSET, heading);
 }
 
 void ShowDiveScreen(UIData data) {
@@ -202,7 +221,7 @@ void ShowDiveScreen(UIData data) {
     Tft.drawText(COLUMN_3, ROW_2, "Head.");
     Tft.drawText(COLUMN_4, ROW_2, "Rate");
 
-
+    Tft.drawText(COLUMN_1, ROW_3, "Max D");
     Tft.drawText(COLUMN_2, ROW_3, "Avg. D");
     Tft.drawText(COLUMN_3, ROW_3, "TTS");
     Tft.drawText(COLUMN_4, ROW_3, "CNS");
@@ -229,6 +248,11 @@ void ShowDiveScreen(UIData data) {
     sprintf(rate, "%.1f", data.Rate);
     Tft.drawText(COLUMN_4, ROW_2 + VAL_OFFSET, rate);
 
+    // maxDepth
+    char maxDepth[7];
+    sprintf(maxDepth, "%.1f", MaxDepth);
+    Tft.drawText(COLUMN_1, ROW_3 + VAL_OFFSET, maxDepth);
+
     // Average Depth
     char avgDepth[7];
     sprintf(avgDepth, "%.1f", data.AverageDepth);
@@ -251,6 +275,7 @@ bool SelfTest() {
     int textRow = 15;
 
     Tft.clear();
+    Tft.setFont(Terminal6x8);
     Tft.drawText(10, 10, "Starting Self Test:");
 
     textRow += 15;
@@ -329,7 +354,7 @@ bool SelfTest() {
     }
     textRow += 15;
     Tft.drawText(10, textRow, "File System...");
-    FSInfo fs_info{};
+    FSInfo fs_info;
     if (!InitFS(fs_info)) {
         Tft.drawText(130, textRow, "ERR", COLOR_RED);
         pass = false;
@@ -351,21 +376,27 @@ bool SelfTest() {
     return pass;
 }
 
+void NextMenuItem() {
+    CurrUIState.Menu->CurrIndex += 1;
+    if (CurrUIState.Menu->CurrIndex >= CurrUIState.Menu->ItemsSize) {
+        CurrUIState.InMenu = false;
+        CurrUIState.Menu->CurrIndex = 0;
+        CurrUIState.ClearNeeded = true;
+    } else if (!CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex].Enabled) // If a menu item is disabled, skip it
+    {
+        NextMenuItem();
+    } else {
+        Tft.fillRectangle(COLUMN_1, ROW_2, COLUMN_4, ROW_3, COLOR_BLACK); // Clear prior menu item
+        ShowMenu(*CurrUIState.Menu);
+    }
+}
+
 void ButtonOne() {
     //Serial.println("Button 1");
-    if(CurrUIState.InMenu)
-    {
-        CurrUIState.Menu->CurrIndex += 1;
-        if(CurrUIState.Menu->CurrIndex >= CurrUIState.Menu->ItemsSize)
-        {
-            CurrUIState.InMenu=false;
-            CurrUIState.Menu->CurrIndex=0;
-            CurrUIState.ClearNeeded = true;
-        }
-    }
-    else
-    {
-        CurrUIState.InMenu=true;
+    if (CurrUIState.InMenu) {
+        NextMenuItem();
+    } else {
+        CurrUIState.InMenu = true;
         CurrUIState.ClearNeeded = true;
     }
 }
@@ -409,7 +440,7 @@ void GasMenuCallback(MenuItem item)
 
     for(int i=0; i < GasMenu.ItemsSize; i++)
     {
-        free(GasMenu.Items[i].MenuText);
+        free((char *) GasMenu.Items[i].MenuText);
     }
 
     CurrUIState.InMenu= false;
@@ -446,10 +477,57 @@ void StartWebCallback(MenuItem item) {
 void StartDiveCallback(MenuItem item) {
     CurrUIState.Mode = DIVE;
     CurrUIState.ClearNeeded = true;
-    CurrUIState.Menu->CurrIndex=0;
+    CurrUIState.Menu->CurrIndex = 0;
     CurrUIState.Menu = &DiveMenu;
     CurrUIState.InMenu = false;
     StartDive();
+}
+
+void CalibrateCompassCallback(MenuItem item) {
+    CurrUIState.InMenu = false;
+    Tft.clear();
+    Tft.setFont(Terminal12x16);
+    Tft.drawText(COLUMN_1, ROW_1, "Compass Calibration");
+    Tft.setFont(Terminal6x8);
+    Tft.drawText(COLUMN_1, ROW_2, "Please spin the computer along");
+    Tft.drawText(COLUMN_1, ROW_2 + 10, "all axis for 30 seconds");
+    RealTime startTime = ReadRTC();
+    RealTime currTime{};
+    float calibrationX = 0;
+    float calibrationY = 0;
+    float calibrationZ = 0;
+    int samples = 0;
+    do {
+        ResetWatchdog();
+        currTime = ReadRTC();
+        sensors_event_t event;
+        Mag.getEvent(&event);
+
+        calibrationX += event.magnetic.x;
+        calibrationY += event.magnetic.y;
+        calibrationZ += event.magnetic.z;
+        samples++;
+
+        Tft.setFont(Terminal6x8);
+        char sampleCounter[5];
+        sprintf(sampleCounter, "%d", samples);
+        Tft.drawText(COLUMN_1, ROW_4, sampleCounter);
+
+        Tft.setFont(Terminal12x16);
+        char timeCounter[5];
+        sprintf(timeCounter, "%02.0f", TimeDiff(currTime, startTime) * 60);
+        Tft.drawText(COLUMN_4, ROW_4, timeCounter);
+    } while (TimeDiff(currTime, startTime) < 3.0 / 6.0);
+
+    CompassCalibration.x = calibrationX / (float) samples;
+    CompassCalibration.y = calibrationY / (float) samples;
+    CompassCalibration.z = calibrationZ / (float) samples;
+
+    Settings settings = GenerateSettings(); // Save the calibration
+    WriteSettingsFile(settings);
+
+    CurrUIState.ClearNeeded = true;
+    CurrUIState.InMenu = false;
 }
 
 MenuItem::MenuItem() = default;

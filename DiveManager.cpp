@@ -9,7 +9,12 @@ RealTime DiveStartTime;
 Deco::Schedule CurrentSchedule;
 double CNS = 0;
 double OTUs = 0;
-double AverageDepth;
+double AverageDepth = 0;
+double DepthSum = 0;
+double MaxDepth = 0;
+double LastUpdateTime = 0;
+double LastDiveDepth = 0;
+double LastDiveTime = 0;
 double LastDepth = 0;
 double CNSSlopes[] = {-1800, -1500, -1200, -900, -600, -300, -750};
 double CNSIntercepts[] = {1800, 1620, 1410, 1170, 900, 570, 1245};
@@ -54,16 +59,9 @@ Deco::Gas GetCurrGas() {
     return DecoActual.Gases[DecoActual.CurrentGas];
 }
 
-void UpdateAvgDepth(double depth, double time)
-{
-    AverageDepth += (AverageDepth-depth)/(time/(ALGO_UPDATE_RATE/60.0));
-}
-
-void AddDiveSegment(UIData data)
-{
-    UpdateAvgDepth(data.Depth, data.DiveTime);
-    DecoActual.AddDecent(data.AmbientPressure, ALGO_UPDATE_RATE/60.0);
-
+void UpdateAvgDepth(double depth, double diveTime, double interval) {
+    DepthSum += depth * interval / 60.0;
+    AverageDepth = (DepthSum) / (diveTime);
 }
 
 void AddO2Exposure(double PPO2, double time) { // Use rectangular approximation
@@ -76,17 +74,38 @@ void AddO2Exposure(double PPO2, double time) { // Use rectangular approximation
         if(PPO2 > 0.5 && PPO2 <= 0.6) { CNSrange=0; }
         else if (PPO2 > 0.6 && PPO2 <= 0.7) { CNSrange=1; }
         else if (PPO2 > 0.7 && PPO2 <= 0.8) { CNSrange=2; }
-        else if (PPO2 > 0.8 && PPO2 <= 0.9) { CNSrange=3; }
-        else if (PPO2 > 0.9 && PPO2 <= 1.1) { CNSrange=4; }
-        else if (PPO2 > 1.1 && PPO2 <= 1.5) { CNSrange=5; }
-        else if (PPO2 > 1.5 && PPO2 <= 1.6) { CNSrange=6; }
+        else if (PPO2 > 0.8 && PPO2 <= 0.9) { CNSrange = 3; }
+        else if (PPO2 > 0.9 && PPO2 <= 1.1) { CNSrange = 4; }
+        else if (PPO2 > 1.1 && PPO2 <= 1.5) { CNSrange = 5; }
+        else if (PPO2 > 1.5 && PPO2 <= 1.6) { CNSrange = 6; }
         else { CNSrange = 6; } // Exceeding limits
 
         double slope = CNSSlopes[CNSrange];
         double intercept = CNSIntercepts[CNSrange];
 
-        CNS += time/(slope * PPO2 + intercept);
+        CNS += time / (slope * PPO2 + intercept);
+    }
+}
 
+void UpdateMaxDepth(double depth) {
+    if (depth > MaxDepth) {
+        MaxDepth = depth;
+    }
+}
+
+void AddDiveSegment(UIData data, double time) {
+    UpdateAvgDepth(data.Depth, data.DiveTime, time);
+    UpdateMaxDepth(data.Depth);
+    DecoActual.AddDecent(data.AmbientPressure, time / 60.0);
+    AddO2Exposure(data.PPO2, time);
+    EnterInDiveLog(data);
+    LastUpdateTime = data.DiveTime;
+}
+
+void UpdateDiveManager(UIData data) {
+    double time = data.DiveTime - LastUpdateTime;
+    if (time > ALGO_UPDATE_RATE) {
+        AddDiveSegment(data, time);
     }
 }
 
@@ -94,8 +113,8 @@ double GetTTS(const std::vector<Deco::DecoStop> &schedule) {
     double tts = 0;
     if (!schedule.empty()) {
         for (auto &i : schedule) {
-            tts += (LastDepth - i.Depth) / ASCENT_RATE; // Add time to ascend to stop
-            tts += i.Time; //Add stop time
+            tts += (LastDepth - i.Depth) / ASCENT_RATE; // Add Time to ascend to stop
+            tts += i.Time; //Add stop Time
         }
     } else {
         tts = LastDepth / ASCENT_RATE;
@@ -105,9 +124,21 @@ double GetTTS(const std::vector<Deco::DecoStop> &schedule) {
 
 void StartDive() {
     DiveStartTime = ReadRTC();
+    AverageDepth = 0;
+    MaxDepth = 0;
+    DepthSum = 0;
+    LastUpdateTime = 0;
     OpenDiveLog();
 }
 
 void EndDive() {
     CloseDiveLog();
+    LastDepth = MaxDepth;
+    LastDiveTime = TimeDiff(ReadRTC(), DiveStartTime);
+    Settings settings = GenerateSettings();
+    WriteSettingsFile(settings);
+}
+
+void DecayO2Exposure(double time) {
+    CNS = CNS * pow(0.5, time / 90); // Decay CNS with a halflife of 90 minutes
 }

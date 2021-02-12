@@ -9,16 +9,31 @@
 #include "Deco.h"
 #include "UI.h"
 #include "DiveManager.h"
-
+#include "HWInterface.h"
 
 #define DIVE_LOG_PATH "/Dives/"
 #define SETTINGS_PATH "/settings.cfg"
 
 #define MAX_GAS_COUNT 10
 
-//#define FORCE_RESET
+#define FORCE_RESET
 
 struct UIData;
+struct CompassCalibrationCoefficients;
+#ifndef REALTIME
+#define REALTIME
+struct RealTime {
+    int Second;
+    int Minute;
+    int Hour;
+
+    int Day;
+    int Month;
+    int Year;
+};
+#else
+struct RealTime;
+#endif
 
 struct Settings {
     double GFHigh;
@@ -28,6 +43,14 @@ struct Settings {
     Deco::Gas Gases[MAX_GAS_COUNT];
     double TissueN2[16];
     double TissueHe[16];
+    double CNS;
+    double OTU;
+    float CompassCalX;
+    float CompassCalY;
+    float CompassCalZ;
+    double LastDepth;
+    double LastTime;
+    RealTime Time;
 };
 
 extern File CurrDiveLog;

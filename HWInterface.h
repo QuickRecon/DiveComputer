@@ -25,9 +25,6 @@ extern "C" {
 
 #include <cmath>
 
-// Serial Port
-//#define EnableSerial // Disables screen PWM
-
 // Button Parameters
 #define BUTTON_THRESHOLD 100
 #define BUTTON_1_CHANNEL 3
@@ -54,11 +51,23 @@ struct RealTime;
 
 struct UIData;
 
+struct DepthSensorData {
+    float Pressure;
+    float Temperature;
+};
+
+struct CompassCalibrationCoefficients {
+    float x;
+    float y;
+    float z;
+};
+
 // Accelerometer Params
 extern Adafruit_LSM303_Accel_Unified Accel;
 
 // Magnetometer Params
 extern Adafruit_LSM303DLH_Mag_Unified Mag;
+extern CompassCalibrationCoefficients CompassCalibration;
 
 // ADC1 Params
 extern QR_ADS1115 Adc1;
@@ -71,12 +80,6 @@ extern MS5837 DepthSensor;
 
 // Use hardware SPI (faster - on Uno: 13-SCK, 12-MISO, 11-MOSI)
 extern TFT_22_ILI9225 Tft;
-
-struct DepthSensorData {
-    float Pressure;
-    float Temperature;
-};
-
 
 bool InitRTC();
 

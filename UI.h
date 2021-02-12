@@ -31,10 +31,13 @@ enum Mode {
 struct MenuItem {
     MenuItem();
 
-    char *MenuText{};
+    const char *MenuText{};
     void ( *Callback)(MenuItem item){};
     bool Enabled{};
-    MenuItem(char *menuText, void (*const callback)(MenuItem item),bool enabled): MenuText(menuText),Callback(callback),Enabled(enabled){}
+
+    MenuItem(const char *menuText, void (*const callback)(MenuItem item), bool enabled) : MenuText(menuText),
+                                                                                          Callback(callback),
+                                                                                          Enabled(enabled) {}
 };
 
 struct Menu
@@ -42,17 +45,19 @@ struct Menu
     struct MenuItem *Items;
     int ItemsSize;
     int CurrIndex;
-    Menu(struct MenuItem* items, int itemsSize,int currIndex) : Items(items), ItemsSize(itemsSize), CurrIndex(currIndex){}
+
+    Menu(struct MenuItem *items, int itemsSize, int currIndex) : Items(items), ItemsSize(itemsSize),
+                                                                 CurrIndex(currIndex) {}
 };
 
-struct UIState
-{
+struct UIState {
     int Mode;
     bool InMenu;
-    struct Menu* Menu;
+    struct Menu *Menu;
     bool ClearNeeded;
 };
-
+#ifndef REALTIME
+#define REALTIME
 struct RealTime {
     int Second;
     int Minute;
@@ -62,6 +67,9 @@ struct RealTime {
     int Month;
     int Year;
 };
+#else
+struct RealTime;
+#endif
 
 struct UIData {
     double Depth;
@@ -90,6 +98,8 @@ struct Bar {
     double MaxValue;
     bool EndStop;
 };
+
+extern UIState CurrUIState;
 
 bool SelfTest();
 
@@ -122,5 +132,7 @@ void StartWebCallback(MenuItem item);
 void StartDiveCallback(MenuItem item);
 
 void GasMenuCallback(MenuItem item);
+
+void CalibrateCompassCallback(MenuItem item);
 
 #endif //DIVECOMPUTER_UI_H
