@@ -29,6 +29,7 @@ extern double AverageDepth;
 extern double DepthSum;
 extern double MaxDepth;
 extern double LastDepth;
+extern double Rate;
 extern Deco DecoActual;
 extern RealTime DiveStartTime;
 extern Deco::Schedule CurrentSchedule;

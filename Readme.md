@@ -11,5 +11,7 @@ Firmware for a homebuilt technical dive computer
 - [x] Fix tissue loading
 - [x] Average depth not working properly
 - [x] Automatically start dive
-- [ ] Timeouts for menu/surface screen
-- [ ] Power off
+- [x] Timeouts for menu/surface screen
+- [x] Power off
+- [ ] Fix surface mode tissue loading
+- [ ] Add Web UI

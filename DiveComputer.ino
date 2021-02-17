@@ -20,26 +20,30 @@ void setup() {
     Tft.begin();
     Tft.clear();
     Tft.setOrientation(1);
-    //Serial.begin(9600);
+    Serial.begin(9600);
     bool pass = SelfTest();
     delay(2000); // Let some Time for the user to look at the self test
     if (!pass) {
         Tft.setDisplay(false);
         ESP.restart();
     }
+    StartWebServer();
+    //PollButtons();
     //TurnOff();
 }
 
 void loop() {
     PollButtons();
-
     UIData data = CollectData();
     UpdateUI(data);
     if (CurrUIState.Mode == DIVE) {
         UpdateDiveManager(data);
-    } else if (CurrUIState.Mode == SURFACE && data.Depth > 1.0) // Automatically start dive if deeper than 1m
+    } else if (CurrUIState.Mode == SURFACE &&
+               data.Depth > SURFACE_DIVE_THRESHOLD) // Automatically start dive if deeper than 1m
     {
         MenuItem dummyItem;
         StartDiveCallback(dummyItem);
+    } else if (CurrUIState.Mode == WIFI) {
+        server.handleClient();
     }
 }

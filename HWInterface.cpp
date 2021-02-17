@@ -75,8 +75,8 @@ void PollButtons() {
     //Serial.print("Button 2: ");
     //Serial.println(button2Val);
 
-    bool button1 = button1Val < LastButton1Val - BUTTON_THRESHOLD;
-    bool button2 = button2Val < LastButton2Val - BUTTON_THRESHOLD;
+    bool button1 = button1Val < LastButton1Val - BUTTON_1_THRESHOLD;
+    bool button2 = button2Val < LastButton2Val - BUTTON_2_THRESHOLD;
 
     LastButton1Val = button1Val;
     LastButton2Val = button2Val;
@@ -138,7 +138,7 @@ UIData CollectData() {
 
     screenData.PPO2 = screenData.Gas.FrO2 * screenData.AmbientPressure;
 
-    screenData.Rate = 0;
+    screenData.Rate = Rate;
 
     CurrentSchedule = GetDecoSchedule();
 
@@ -160,7 +160,7 @@ void TurnOff() {
     digitalWrite(TFT_LED, LOW);
     Tft.setDisplay(false);
     Adc1.startWindowComparator_SingleEnded(BUTTON_1_CHANNEL, (int) ceilf(3.3 / ADC_1_V_PER_BIT),
-                                           LastButton1Val - BUTTON_THRESHOLD);
+                                           LastButton1Val);
     delay(1000);
 
     wifi_station_disconnect();

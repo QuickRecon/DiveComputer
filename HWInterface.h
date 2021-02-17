@@ -19,14 +19,16 @@
 #include <SPI.h>
 #include "FSInterface.h"
 #include <ESP8266WiFi.h>
+
 extern "C" {
-    #include "user_interface.h"
+#include "user_interface.h"
 }
 
 #include <cmath>
 
 // Button Parameters
-#define BUTTON_THRESHOLD 100
+#define BUTTON_1_THRESHOLD 35
+#define BUTTON_2_THRESHOLD 35
 #define BUTTON_1_CHANNEL 3
 #define BUTTON_2_CHANNEL 2
 

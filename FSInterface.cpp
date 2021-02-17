@@ -269,3 +269,13 @@ void EnterInDiveLog(UIData data) {
     sprintf(row, "%s,%02d:%02d,%.1f,%f.1", SampleStartText, minutes, seconds, data.Depth, data.Temperature);
     CurrDiveLog.println(row);
 }
+
+std::vector<std::string> ListDives() {
+    Dir diveDir = LittleFS.openDir(DIVE_LOG_PATH);
+    std::vector<std::string> diveVector;
+    while (diveDir.next()) {
+        Serial.print(diveDir.fileName());
+        diveVector.emplace_back(diveDir.fileName().c_str());
+    }
+    return diveVector;
+}

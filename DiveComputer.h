@@ -9,6 +9,7 @@
 #include "DiveManager.h"
 #include "HWInterface.h"
 #include <Deco.h>
+#include "WebServer.h"
 
 void ResetWatchdog();
 

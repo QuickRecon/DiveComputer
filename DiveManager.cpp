@@ -10,12 +10,14 @@ Deco::Schedule CurrentSchedule;
 double CNS = 0;
 double OTUs = 0;
 double AverageDepth = 0;
+double DepthSamples = 0;
 double DepthSum = 0;
 double MaxDepth = 0;
 double LastUpdateTime = 0;
 double LastDiveDepth = 0;
 double LastDiveTime = 0;
 double LastDepth = 0;
+double Rate = 0;
 double CNSSlopes[] = {-1800, -1500, -1200, -900, -600, -300, -750};
 double CNSIntercepts[] = {1800, 1620, 1410, 1170, 900, 570, 1245};
 
@@ -59,19 +61,27 @@ Deco::Gas GetCurrGas() {
     return DecoActual.Gases[DecoActual.CurrentGas];
 }
 
-void UpdateAvgDepth(double depth, double diveTime, double interval) {
-    DepthSum += depth * interval / 60.0;
-    AverageDepth = (DepthSum) / (diveTime);
+void UpdateAvgDepth(double depth) {
+    if (depth > SURFACE_DIVE_THRESHOLD) { // Only add to average depth if its not at the surface
+        DepthSum += depth;
+        DepthSamples++;
+        AverageDepth = (DepthSum) / (DepthSamples);
+    }
+
+}
+
+void UpdateRate(double depth) {
+    Rate = depth - LastDepth;
 }
 
 void AddO2Exposure(double PPO2, double time) { // Use rectangular approximation
-    if(PPO2 > 0.5){ // oxtox only applies for PPO2 > 0.5
+    if (PPO2 > 0.5) { // oxtox only applies for PPO2 > 0.5
         // Calculate OTUs
-        OTUs += time * pow(0.5/(PPO2-0.5),-5.0/3.0);
+        OTUs += time * pow(0.5 / (PPO2 - 0.5), -5.0 / 3.0);
 
         // CNS
         int CNSrange;
-        if(PPO2 > 0.5 && PPO2 <= 0.6) { CNSrange=0; }
+        if (PPO2 > 0.5 && PPO2 <= 0.6) { CNSrange = 0; }
         else if (PPO2 > 0.6 && PPO2 <= 0.7) { CNSrange=1; }
         else if (PPO2 > 0.7 && PPO2 <= 0.8) { CNSrange=2; }
         else if (PPO2 > 0.8 && PPO2 <= 0.9) { CNSrange = 3; }
@@ -94,12 +104,14 @@ void UpdateMaxDepth(double depth) {
 }
 
 void AddDiveSegment(UIData data, double time) {
-    UpdateAvgDepth(data.Depth, data.DiveTime, time);
+    UpdateAvgDepth(data.Depth);
     UpdateMaxDepth(data.Depth);
-    DecoActual.AddDecent(data.AmbientPressure, time / 60.0);
+    UpdateRate(data.Depth);
+    DecoActual.AddDecent(data.AmbientPressure, time);
     AddO2Exposure(data.PPO2, time);
     EnterInDiveLog(data);
     LastUpdateTime = data.DiveTime;
+    LastDepth = data.Depth;
 }
 
 void UpdateDiveManager(UIData data) {
@@ -127,13 +139,14 @@ void StartDive() {
     AverageDepth = 0;
     MaxDepth = 0;
     DepthSum = 0;
+    DepthSamples = 0;
     LastUpdateTime = 0;
     OpenDiveLog();
 }
 
 void EndDive() {
     CloseDiveLog();
-    LastDepth = MaxDepth;
+    LastDiveDepth = MaxDepth;
     LastDiveTime = TimeDiff(ReadRTC(), DiveStartTime);
     Settings settings = GenerateSettings();
     WriteSettingsFile(settings);

@@ -72,4 +72,6 @@ void CloseDiveLog();
 
 void EnterInDiveLog(UIData data);
 
+std::vector<std::string> ListDives();
+
 #endif //DIVECOMPUTER_FSINTERFACE_H
