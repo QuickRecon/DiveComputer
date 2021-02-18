@@ -75,7 +75,21 @@ void UpdateUI(UIData &data) {
         } else {
             ShowSurfaceScreen(data);
         }
+    } else if (CurrUIState.Mode == WIFI) {
+        server.handleClient();
+        ShowWifiScreen(data);
     }
+}
+
+void ShowWifiScreen(UIData data) {
+    Tft.setFont(Terminal12x16);
+    Tft.drawText(COLUMN_1, ROW_1, "Web Server Active");
+    Tft.setFont(Terminal6x8);
+    Tft.drawText(COLUMN_1, ROW_1 + 20, "Press Left Button to exit");
+    Tft.drawText(COLUMN_1, ROW_1 + 30, "IP: " + local_ip.toString());
+    Tft.drawText(COLUMN_1, ROW_1 + 40, "SSID: " + String(AP_SSID));
+    Tft.drawText(COLUMN_1, ROW_1 + 50, "Password: " + String(AP_PASSWORD));
+    ShowBottomRow(data);
 }
 
 void ShowMenu(Menu &menu) {
@@ -411,12 +425,16 @@ void NextMenuItem() {
 }
 
 void ButtonOne() {
-    //Serial.println("Button 1");
-    if (CurrUIState.InMenu) {
-        NextMenuItem();
+    if (CurrUIState.Mode == WIFI) {
+        MenuItem dummyItem{};
+        StopWebCallback(dummyItem);
     } else {
-        CurrUIState.InMenu = true;
-        CurrUIState.ClearNeeded = true;
+        if (CurrUIState.InMenu) {
+            NextMenuItem();
+        } else {
+            CurrUIState.InMenu = true;
+            CurrUIState.ClearNeeded = true;
+        }
     }
 }
 
@@ -489,7 +507,17 @@ void TurnOffCallback(MenuItem &item) {
 }
 
 void StartWebCallback(MenuItem &item) {
+    StartWebServer();
+    CurrUIState.Mode = WIFI;
+    CurrUIState.ClearNeeded = true;
+    CurrUIState.Menu->CurrIndex = 0;
+    CurrUIState.InMenu = false;
+}
 
+void StopWebCallback(MenuItem &item) {
+    CurrUIState.Mode = SURFACE;
+    StopWebServer();
+    CurrUIState.ClearNeeded = true;
 }
 
 void StartDiveCallback(MenuItem &item) {

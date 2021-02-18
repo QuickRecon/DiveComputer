@@ -21,6 +21,8 @@ extern ESP8266WebServer server;
 
 void StartWebServer();
 
+void StopWebServer();
+
 void handle_Root();
 
 void handle_NotFound();

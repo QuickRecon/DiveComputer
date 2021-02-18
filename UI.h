@@ -107,6 +107,8 @@ struct Bar {
 
 extern UIState CurrUIState;
 
+void ShowWifiScreen(UIData data);
+
 bool SelfTest();
 
 void ShowDiveScreen(UIData &data);
@@ -134,6 +136,8 @@ void EndDiveCallback(MenuItem &item);
 void TurnOffCallback(MenuItem &item);
 
 void StartWebCallback(MenuItem &item);
+
+void StopWebCallback(MenuItem &item);
 
 void StartDiveCallback(MenuItem &item);
 

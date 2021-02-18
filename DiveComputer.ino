@@ -25,11 +25,10 @@ void setup() {
     delay(2000); // Let some Time for the user to look at the self test
     if (!pass) {
         Tft.setDisplay(false);
-        ESP.restart();
+        //ESP.restart();
+        MenuItem dummyItem;
+        TurnOffCallback(dummyItem); // Shutdown
     }
-    StartWebServer();
-    //PollButtons();
-    //TurnOff();
 }
 
 void loop() {
@@ -43,7 +42,5 @@ void loop() {
     {
         MenuItem dummyItem;
         StartDiveCallback(dummyItem);
-    } else if (CurrUIState.Mode == WIFI) {
-        server.handleClient();
     }
 }

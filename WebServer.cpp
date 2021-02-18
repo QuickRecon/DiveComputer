@@ -35,6 +35,8 @@ void StartWebServer() {
 void StopWebServer() {
     server.close();
     server.stop();
+    //server = ESP8266WebServer(80); // just straight up remake the object, no cleaning up here
+    WiFi.softAPdisconnect(true);
     WiFi.forceSleepBegin();
 }
 
