@@ -117,7 +117,15 @@ void AddDiveSegment(UIData data, double time) {
 void UpdateDiveManager(UIData data) {
     double time = data.DiveTime - LastUpdateTime;
     if (time > ALGO_UPDATE_RATE) {
-        AddDiveSegment(data, time);
+        if (CurrUIState.Mode == DIVE) {
+            AddDiveSegment(data, time);
+        } else {
+            DecoActual.AddDecent(data.AmbientPressure, time);
+            DecayO2Exposure(time);
+            LastUpdateTime = data.DiveTime;
+            LastDepth = data.Depth;
+        }
+
     }
 }
 

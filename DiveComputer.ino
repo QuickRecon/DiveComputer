@@ -20,7 +20,7 @@ void setup() {
     Tft.begin();
     Tft.clear();
     Tft.setOrientation(1);
-    Serial.begin(9600);
+    //Serial.begin(9600);
     bool pass = SelfTest();
     delay(2000); // Let some Time for the user to look at the self test
     if (!pass) {

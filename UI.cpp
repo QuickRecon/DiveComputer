@@ -11,10 +11,10 @@ Bar TimeBar = {.OriginX=COLUMN_4 + 18, .OriginY=ROW_4 + VAL_OFFSET +
 
 // Menu Items
 MenuItem MenuSwitchGas = MenuItem("Switch Gas", &SwitchGasCallback, true);
-MenuItem MenuEndDive = MenuItem("End Dive", &EndDiveCallback, true);
+MenuItem MenuEndDive = MenuItem("End Dive", &EndDiveCallback, false);
 MenuItem MenuTurnOff = MenuItem("Turn Off", &TurnOffCallback, true);
-MenuItem MenuStartWeb = MenuItem("Start Web", &StartWebCallback, false);
-MenuItem MenuStartDive = MenuItem("Start Dive", &StartDiveCallback, true);
+MenuItem MenuStartWeb = MenuItem("Start Web", &StartWebCallback, true);
+MenuItem MenuStartDive = MenuItem("Start Dive", &StartDiveCallback, false);
 MenuItem CalibrateCompass = MenuItem("Calibrate Compass", &CalibrateCompassCallback, true);
 
 // Menu Structure
