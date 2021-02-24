@@ -140,9 +140,9 @@ UIData CollectData() {
 
     screenData.Rate = Rate;
 
-    CurrentSchedule = GetDecoSchedule();
+    CurrentSchedule = DecoActual.GetDecoSchedule(ResetWatchdog);
 
-    if (GetDecoSchedule().empty()) {
+    if (CurrentSchedule.empty()) {
         screenData.NDL = DecoActual.GetNoDecoTime();
         screenData.Stop = Deco::DecoStop();
     } else {

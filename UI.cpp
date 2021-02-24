@@ -383,7 +383,7 @@ bool SelfTest() {
     int time = 60;
     testDeco->AddDecent(MeterToBar(depth), MeterToBar(testDeco->DecentRate));
     testDeco->AddBottom(time);
-    std::vector<Deco::DecoStop> Schedule = GetDecoSchedule(testDeco);
+    std::vector<Deco::DecoStop> Schedule = testDeco->GetDecoSchedule(ResetWatchdog);
     if (testDeco->Gases.empty()) {
         Tft.drawText(130, textRow, "ERR", COLOR_RED);
         pass = false;

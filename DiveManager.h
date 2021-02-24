@@ -37,10 +37,6 @@ extern double LastUpdateTime;
 extern double LastDiveDepth;
 extern double LastDiveTime;
 
-Deco::Schedule GetDecoSchedule();
-
-Deco::Schedule GetDecoSchedule(Deco *decoObject);
-
 double TimeDiff(RealTime time1, RealTime time2);
 
 Deco::Gas GetCurrGas();

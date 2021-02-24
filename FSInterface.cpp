@@ -101,13 +101,8 @@ Settings GenerateSettings() {
         settings.Gases[i].FrN2 = DecoActual.Gases[i].FrN2;
     }
 
-    for (int i = 0; i < 16; i++) {
-        settings.TissueN2[i] = DecoActual.Pn[i];
-    }
-
-    for (int i = 0; i < 16; i++) {
-        settings.TissueHe[i] = DecoActual.Ph[i];
-    }
+    DecoActual.GetN2Loading(settings.TissueN2);
+    DecoActual.GetN2Loading(settings.TissueHe);
 
     settings.Time = ReadRTC();
 
@@ -136,13 +131,8 @@ void ApplySettings(Settings settings) {
         DecoActual.AddGas(settings.Gases[i].FrN2, settings.Gases[i].FrO2, settings.Gases->FrHe);
     }
 
-    for (int i = 0; i < 16; i++) {
-        DecoActual.Pn[i] = settings.TissueN2[i];
-    }
-
-    for (int i = 0; i < 16; i++) {
-        DecoActual.Ph[i] = settings.TissueHe[i];
-    }
+    DecoActual.SetN2Loading(settings.TissueN2);
+    DecoActual.SetN2Loading(settings.TissueHe);
 
     // Propagate the tissues forward in Time
     double diff = TimeDiff(ReadRTC(), settings.Time);
