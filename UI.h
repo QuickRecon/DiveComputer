@@ -25,6 +25,7 @@
 
 #define END_DIVE_TIMEOUT 5
 #define TURN_OFF_TIMEOUT 10
+#define MENU_TIMEOUT 1
 
 #define MAX_GAS_COUNT 10
 enum Mode {

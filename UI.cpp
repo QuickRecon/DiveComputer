@@ -55,6 +55,12 @@ void UpdateUI(UIData &data) {
         TurnOffCallback(MenuTurnOff);
     }
 
+    if (TimeDiff(data.Time, Timeout) > MENU_TIMEOUT && CurrUIState.InMenu) {
+        CurrUIState.InMenu = false;
+        CurrUIState.Menu->CurrIndex = 0;
+        CurrUIState.ClearNeeded = true;
+    }
+
     if (CurrUIState.ClearNeeded) {
         Tft.clear();
         CurrUIState.ClearNeeded = false;

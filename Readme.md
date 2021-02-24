@@ -5,7 +5,7 @@ Firmware for a homebuilt technical dive computer
 ## TODO
 - [x] Screen clearing between menu items
 - [x] CNS decay
-- [ ] OTU reset
+- [x] OTU reset
 - [x] Lock out end dive when below 1m
 - [x] Add Compass calibration tool
 - [x] Fix tissue loading
@@ -13,5 +13,5 @@ Firmware for a homebuilt technical dive computer
 - [x] Automatically start dive
 - [x] Timeouts for menu/surface screen
 - [x] Power off
-- [ ] Fix surface mode tissue loading
-- [ ] Add Web UI
+- [x] Fix surface mode tissue loading
+- [x] Add Web UI
