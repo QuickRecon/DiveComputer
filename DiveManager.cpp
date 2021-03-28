@@ -94,7 +94,7 @@ void UpdateDiveManager(UIData data) {
     if (time > ALGO_UPDATE_RATE) {
         if (CurrUIState.Mode == DIVE) {
             AddDiveSegment(data, time);
-        } else {
+        } else { // If not dive just propagate surface variables
             DecoActual.AddDecent(data.AmbientPressure, time);
             DecayO2Exposure(time);
             LastUpdateTime = data.DiveTime;

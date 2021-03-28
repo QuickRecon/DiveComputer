@@ -28,7 +28,7 @@ Menu DiveMenu = Menu(DiveItems, 2, 0);
 Menu GasMenu = Menu(GasItems, MAX_GAS_COUNT, 0);
 
 // Stage
-UIState CurrUIState = {.Mode=SURFACE, .InMenu=false, .Menu=&SurfaceMenu, .ClearNeeded=true};
+UIState CurrUIState = {.Mode=SURFACE, .InMenu=false, .Menu=&SurfaceMenu, .ClearNeeded=true, .inDeco=false};
 
 // Timeout Trackers
 RealTime Timeout;
@@ -58,6 +58,11 @@ void UpdateUI(UIData &data) {
     if (TimeDiff(data.Time, Timeout) > MENU_TIMEOUT && CurrUIState.InMenu) {
         CurrUIState.InMenu = false;
         CurrUIState.Menu->CurrIndex = 0;
+        CurrUIState.ClearNeeded = true;
+    }
+
+    if ((data.NDL == -1) != CurrUIState.inDeco) {
+        CurrUIState.inDeco = (data.NDL == -1);
         CurrUIState.ClearNeeded = true;
     }
 
@@ -136,7 +141,7 @@ void ShowDiveTopRow(UIData &data) {
     Tft.setFont(Terminal6x8);
     Tft.drawText(COLUMN_1, ROW_1, "Depth");
     Tft.drawText(COLUMN_2, ROW_1, "Time");
-    if (data.NDL == -1) {
+    if (CurrUIState.inDeco) {
         Tft.drawText(COLUMN_3, ROW_1, "Stop");
         Tft.drawText(COLUMN_4, ROW_1, "S Time");
     } else {
@@ -155,7 +160,7 @@ void ShowDiveTopRow(UIData &data) {
     Tft.drawText(COLUMN_2, ROW_1 + VAL_OFFSET, diveTime);
     ShowBar(DiveTimeBar, data.DiveTime - (double) ((int) data.DiveTime));
 
-    if (data.NDL == -1) {
+    if (CurrUIState.inDeco) {
         char stop[4];
         sprintf(stop, "%.0f", data.Stop.Depth);
         char stime[4];
@@ -350,18 +355,24 @@ bool SelfTest() {
     }
 
     textRow += 15;
-    Tft.drawText(10, textRow, "ADC1...");
-    Adc1.begin();
-    Adc1.setGain(GAIN_TWOTHIRDS);
-    Adc1.getLastConversionResults();
-    Tft.drawText(130, textRow, "OK", COLOR_GREEN);
+    Tft.drawText(10, textRow, "ADC...");
+    if (!InitADC()) {
+        Tft.drawText(130, textRow, "ERR", COLOR_RED);
+        pass = false;
+    } else {
+        Mag.enableAutoRange(true);
+        Tft.drawText(130, textRow, "OK", COLOR_GREEN);
+    }
 
     textRow += 15;
-    Tft.drawText(10, textRow, "ADC2...");
-    Adc2.begin();
-    Adc2.setGain(GAIN_TWOTHIRDS);
-    Adc2.getLastConversionResults();
-    Tft.drawText(130, textRow, "OK", COLOR_GREEN);
+    Tft.drawText(10, textRow, "IO Manager...");
+    if (!InitIO()) {
+        Tft.drawText(130, textRow, "ERR", COLOR_RED);
+        pass = false;
+    } else {
+        Mag.enableAutoRange(true);
+        Tft.drawText(130, textRow, "OK", COLOR_GREEN);
+    }
 
     textRow += 15;
     Tft.drawText(10, textRow, "Depth Sensor...");
@@ -418,9 +429,7 @@ void NextMenuItem() {
     Timeout = ReadRTC();
     CurrUIState.Menu->CurrIndex += 1;
     if (CurrUIState.Menu->CurrIndex >= CurrUIState.Menu->ItemsSize) {
-        CurrUIState.InMenu = false;
-        CurrUIState.Menu->CurrIndex = 0;
-        CurrUIState.ClearNeeded = true;
+        RestoreMenu();
     } else if (!CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex]->Enabled) // If a menu item is disabled, skip it
     {
         NextMenuItem();
@@ -438,6 +447,7 @@ void ButtonOne() {
         if (CurrUIState.InMenu) {
             NextMenuItem();
         } else {
+            Timeout = ReadRTC();
             CurrUIState.InMenu = true;
             CurrUIState.ClearNeeded = true;
         }
@@ -446,10 +456,20 @@ void ButtonOne() {
 
 void ButtonTwo() {
     //Serial.println("Button 2");
-    if(CurrUIState.InMenu)
-    {
+    if (CurrUIState.InMenu) {
         CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex]->Callback(
                 *CurrUIState.Menu->Items[CurrUIState.Menu->CurrIndex]);
+    }
+}
+
+void RestoreMenu() {
+    CurrUIState.InMenu = false;
+    GasMenu.CurrIndex = 0;
+    CurrUIState.ClearNeeded = true;
+    if (CurrUIState.Mode == DIVE) {
+        CurrUIState.Menu = &DiveMenu;
+    } else if (CurrUIState.Mode == SURFACE) {
+        CurrUIState.Menu = &SurfaceMenu;
     }
 }
 
@@ -484,18 +504,7 @@ void GasMenuCallback(MenuItem &item) {
     {
         free((char *) GasMenu.Items[i]->MenuText);
     }
-
-    CurrUIState.InMenu= false;
-    GasMenu.CurrIndex = 0;
-    CurrUIState.ClearNeeded = true;
-    if(CurrUIState.Mode==DIVE)
-    {
-        CurrUIState.Menu=&DiveMenu;
-    }
-    else if (CurrUIState.Mode == SURFACE)
-    {
-        CurrUIState.Menu=&SurfaceMenu;
-    }
+    RestoreMenu();
 }
 
 void EndDiveCallback(MenuItem &item) {
@@ -539,15 +548,19 @@ void CalibrateCompassCallback(MenuItem &item) {
     CurrUIState.InMenu = false;
     Tft.clear();
     Tft.setFont(Terminal12x16);
-    Tft.drawText(COLUMN_1, ROW_1, "Compass Calibration");
+    Tft.drawText(COLUMN_1, ROW_1, "Compass Cal.");
     Tft.setFont(Terminal6x8);
     Tft.drawText(COLUMN_1, ROW_2, "Please spin the computer along");
     Tft.drawText(COLUMN_1, ROW_2 + 10, "all axis for 30 seconds");
+    Tft.drawText(COLUMN_1, ROW_3, "Press left Button to exit");
     RealTime startTime = ReadRTC();
     RealTime currTime{};
     float calibrationX = 0;
     float calibrationY = 0;
     float calibrationZ = 0;
+
+    //double LastButton1Val = Adc.readADC_SingleEnded(BUTTON_1_CHANNEL);
+    bool abort = false;
     int samples = 0;
     do {
         ResetWatchdog();
@@ -569,14 +582,22 @@ void CalibrateCompassCallback(MenuItem &item) {
         char timeCounter[5];
         sprintf(timeCounter, "%02.0f", TimeDiff(currTime, startTime) * 60);
         Tft.drawText(COLUMN_4, ROW_4, timeCounter);
-    } while (TimeDiff(currTime, startTime) < 3.0 / 6.0);
+        //double button1 = Adc.readADC_SingleEnded(BUTTON_1_CHANNEL);
+        //if(button1 < LastButton1Val - BUTTON_1_THRESHOLD)
+        //{
+        //    abort = true;
+        //}
+        //LastButton1Val = button1;
+    } while (TimeDiff(currTime, startTime) < 3.0 / 6.0 && !abort);
 
-    CompassCalibration.x = calibrationX / (float) samples;
-    CompassCalibration.y = calibrationY / (float) samples;
-    CompassCalibration.z = calibrationZ / (float) samples;
+    if (!abort) {
+        CompassCalibration.x = calibrationX / (float) samples;
+        CompassCalibration.y = calibrationY / (float) samples;
+        CompassCalibration.z = calibrationZ / (float) samples;
 
-    Settings settings = GenerateSettings(); // Save the calibration
-    WriteSettingsFile(settings);
+        Settings settings = GenerateSettings(); // Save the calibration
+        WriteSettingsFile(settings);
+    }
 
     CurrUIState.ClearNeeded = true;
     CurrUIState.Menu->CurrIndex = 0;

@@ -3,9 +3,6 @@
 //
 #include "HWInterface.h"
 
-double LastButton1Val = -1000;
-double LastButton2Val = -1000;
-
 // Accelerometer Params
 Adafruit_LSM303_Accel_Unified Accel = Adafruit_LSM303_Accel_Unified(54321);
 
@@ -14,17 +11,16 @@ Adafruit_LSM303DLH_Mag_Unified Mag = Adafruit_LSM303DLH_Mag_Unified(12345);
 CompassCalibrationCoefficients CompassCalibration{0, 0, 0};
 
 // ADC1 Params
-QR_ADS1115 Adc1 = QR_ADS1115(0x49);
-
-// ADC2 Params
-QR_ADS1115 Adc2 = QR_ADS1115(0x48);
+QR_ADS1115 Adc = QR_ADS1115(ADC_ADDRESS);
 
 // Depth Sensor Params
 MS5837 DepthSensor;
 
+// Screen Params
 TFT_22_ILI9225 Tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, 0, 255);
-//TFT_22_ILI9225 Tft  = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_SDI, TFT_CLK, TFT_LED, 255);
 
+// IO Expander Params
+//PCF8574 IOExpander(IO_ADDRESS);
 
 bool InitRTC() {
     rtc.begin(RTC_CS);
@@ -40,6 +36,38 @@ bool InitDepth() {
     bool status = DepthSensor.init();
     SurfacePressure = ReadDepthSensor().Pressure / 1000.0;
     return status;
+}
+
+bool InitIO() {
+    // Set pin modes
+    //IOExpander.pinMode(P0, OUTPUT);
+    //IOExpander.pinMode(P1, OUTPUT);
+    //IOExpander.pinMode(P2, OUTPUT);
+    //IOExpander.pinMode(P3, INPUT);
+    //IOExpander.pinMode(P4, INPUT);
+    //IOExpander.pinMode(P5, INPUT);
+    //IOExpander.pinMode(P6, INPUT);
+    //IOExpander.pinMode(P7, INPUT);
+
+    //IOExpander.digitalWrite(OUTPUT_ENABLE,LOW);
+    //DisableReset();
+
+    Wire.beginTransmission(IO_READ_ADDRESS);
+    bool readOK = Wire.endTransmission() == 0;
+
+    Wire.beginTransmission(IO_WRITE_ADDRESS);
+    bool writeOK = Wire.endTransmission() == 0;
+
+    return readOK && writeOK;
+}
+
+bool InitADC() {
+    Adc.begin();
+    Adc.setGain(GAIN_TWOTHIRDS);
+    Adc.getLastConversionResults();
+
+    Wire.beginTransmission(ADC_ADDRESS);
+    return Wire.endTransmission() == 0;
 }
 
 DepthSensorData ReadDepthSensor() {
@@ -66,27 +94,21 @@ RealTime ReadRTC() {
 }
 
 void PollButtons() {
-    int16_t button1Val, button2Val;
-    button1Val = Adc1.readADC_SingleEnded(BUTTON_1_CHANNEL); // Button 1 on left
-    button2Val = Adc1.readADC_SingleEnded(BUTTON_2_CHANNEL); // Button 2 on right
+    Wire.requestFrom(IO_READ_ADDRESS, (uint8_t) 1);
+    byte IOByte = Wire.read();// Read a byte
 
-    //Serial.print("Button 1: ");
-    //Serial.println(button1Val);
-    //Serial.print("Button 2: ");
-    //Serial.println(button2Val);
+    Serial.println(IOByte);
 
-    bool button1 = button1Val < LastButton1Val - BUTTON_1_THRESHOLD;
-    bool button2 = button2Val < LastButton2Val - BUTTON_2_THRESHOLD;
+    bool button1 = (bit(BUTTON_1_PIN) & IOByte) == 0;
+    bool button2 = (bit(BUTTON_2_PIN) & IOByte) == 0;
 
-    LastButton1Val = button1Val;
-    LastButton2Val = button2Val;
+    Serial.print("Button 1: ");
+    Serial.println(button1);
+    Serial.print("Button 2: ");
+    Serial.println(button2);
 
     if (button1 && button2) {
-        if (fabs(LastButton1Val - button1Val) > fabs(LastButton2Val - button2Val)) {
-            ButtonOne();
-        } else {
-            ButtonTwo();
-        }
+        // Implement 2 button combination?
     } else if (button1) {
         ButtonOne();
     } else if (button2) {
@@ -106,7 +128,7 @@ double ReadHeading() {
     double Pi = 3.14159;
 
     // Calculate the angle of the vector y,x
-    double heading = (atan2(z, x) * 180) / Pi;
+    double heading = (atan2(x, y) * 180) / Pi;
 
     // Normalize to 0-360
     if (heading < 0) {
@@ -143,7 +165,7 @@ UIData CollectData() {
     CurrentSchedule = DecoActual.GetDecoSchedule(ResetWatchdog);
 
     if (CurrentSchedule.empty()) {
-        screenData.NDL = DecoActual.GetNoDecoTime();
+        screenData.NDL = DecoActual.GetNoDecoTime(ResetWatchdog);
         screenData.Stop = Deco::DecoStop();
     } else {
         screenData.Stop = CurrentSchedule[0];
@@ -156,29 +178,40 @@ UIData CollectData() {
 }
 
 void TurnOff() {
-    //Serial.println("Turning off");
+    // Turn off display
+    Serial.println("Turning off");
     digitalWrite(TFT_LED, LOW);
     Tft.setDisplay(false);
-    Adc1.startWindowComparator_SingleEnded(BUTTON_1_CHANNEL, (int) ceilf(3.3 / ADC_1_V_PER_BIT),
-                                           LastButton1Val);
-    delay(1000);
 
-    wifi_station_disconnect();
-    wifi_set_opmode_current(NULL_MODE);
-    wifi_fpm_set_sleep_type(
-            LIGHT_SLEEP_T); // set sleep type, the above    posters wifi_set_sleep_type() didnt seem to work for me although it did let me compile and upload with no errors
-    wifi_fpm_open(); // Enables force sleep
-    gpio_pin_wakeup_enable(GPIO_ID_PIN(PWR_UP_PIN),
-                           GPIO_PIN_INTR_LOLEVEL); // GPIO_ID_PIN(2) corresponds to GPIO2 on ESP8266-01 , GPIO_PIN_INTR_LOLEVEL for a logic low, can also do other interrupts, see gpio.h above
-    wifi_fpm_do_sleep(0xFFFFFFF); // Sleep for longest possible Time
-    delay(500);
-    // Be Asleep
-    ESP.restart(); //On Wake restart
+    // Arm the reset circuit
+    EnableReset();
+
+    ESP.deepSleep(0); // Shut down
+}
+
+void EnableReset() {
+    Wire.beginTransmission(IO_WRITE_ADDRESS); // Plus 1 to switch to write address
+    Wire.write(LATCH_ENABLE_RESET_ENABLE);
+    delay(10); // Delay a tad to allow the circuits to set up
+    Wire.write(LATCH_DISABLE_RESET_ENABLE);
+    Wire.endTransmission();
+}
+
+void DisableReset() {
+    Wire.beginTransmission(IO_WRITE_ADDRESS);
+    Wire.write(LATCH_ENABLE_RESET_DISABLE);
+    delay(10); // Delay a tad to allow the circuits to set up
+    Wire.write(LATCH_DISABLE_RESET_DISABLE);
+    Wire.endTransmission();
 }
 
 double ReadBatteryVoltage() {
     int16_t batteryVal;
-    batteryVal = Adc1.readADC_SingleEnded(BATTERY_CHANNEL);
+    batteryVal = analogRead(BATTERY_PIN);
 
-    return ((double) batteryVal) * ADC_1_V_PER_BIT * 2; // 1/2 voltage divider on battery
+    double dividerTop = 92.9;
+    double dividerBottom = 97.7;
+
+    return ((double) batteryVal) * (dividerTop + dividerBottom) / dividerBottom /
+           1024; // 1/2 voltage divider on battery
 }

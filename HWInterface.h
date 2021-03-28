@@ -19,6 +19,7 @@
 #include <SPI.h>
 #include "FSInterface.h"
 #include <ESP8266WiFi.h>
+#include "PCF8574.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -27,27 +28,32 @@ extern "C" {
 #include <cmath>
 
 // Button Parameters
-#define BUTTON_1_THRESHOLD 35
-#define BUTTON_2_THRESHOLD 35
-#define BUTTON_1_CHANNEL 3
-#define BUTTON_2_CHANNEL 2
+#define BUTTON_1_PIN P6 // On IO Expander
+#define BUTTON_2_PIN P7 // On IO Expander
 
 // TFT Params
-#define TFT_RST 3   // D3
-#define TFT_RS  16   // D0
-#define TFT_CS  2  // D8 SS
-#define TFT_LED 1  // D4     set 0 if wired to +5V directly -> D3=0 is not possible !!
+#define TFT_RST 0   // NULL
+#define TFT_RS  2   // D0
+#define TFT_CS  15  // D8 SS
+#define TFT_LED 16  // D4     set 0 if wired to +5V directly -> D3=0 is not possible !!
+
+// Reset circuit parameters
+#define LATCH_ENABLE_RESET_ENABLE   0b11111111
+#define LATCH_DISABLE_RESET_ENABLE  0b10011111
+#define LATCH_ENABLE_RESET_DISABLE  0b01111111
+#define LATCH_DISABLE_RESET_DISABLE 0b00011111
 
 // ADC Params
 #define ADC_1_V_PER_BIT 0.000188
-
+#define ADC_ADDRESS 0x48
 // RTC Params
-#define RTC_CS 15
+#define RTC_CS 0
 #define SET_CLOCK 0
-
+// IO Expander Params
+#define IO_READ_ADDRESS 0x20
+#define IO_WRITE_ADDRESS 0x21
 // Misc Params
-#define PWR_UP_PIN 0
-#define BATTERY_CHANNEL 1
+#define BATTERY_PIN A0
 
 struct RealTime;
 
@@ -72,10 +78,7 @@ extern Adafruit_LSM303DLH_Mag_Unified Mag;
 extern CompassCalibrationCoefficients CompassCalibration;
 
 // ADC1 Params
-extern QR_ADS1115 Adc1;
-
-// ADC2 Params
-extern QR_ADS1115 Adc2;
+extern QR_ADS1115 Adc;
 
 // Depth Sensor Params
 extern MS5837 DepthSensor;
@@ -83,9 +86,15 @@ extern MS5837 DepthSensor;
 // Use hardware SPI (faster - on Uno: 13-SCK, 12-MISO, 11-MOSI)
 extern TFT_22_ILI9225 Tft;
 
+//extern PCF8574 IOExpander;
+
 bool InitRTC();
 
 bool InitDepth();
+
+bool InitIO();
+
+bool InitADC();
 
 DepthSensorData ReadDepthSensor();
 
@@ -98,6 +107,10 @@ void PollButtons();
 UIData CollectData();
 
 void TurnOff();
+
+void EnableReset();
+
+void DisableReset();
 
 double ReadBatteryVoltage();
 

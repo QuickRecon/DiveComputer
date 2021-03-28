@@ -62,6 +62,7 @@ struct UIState {
     bool InMenu;
     struct Menu *Menu;
     bool ClearNeeded;
+    bool inDeco;
 };
 #ifndef REALTIME
 #define REALTIME
@@ -119,6 +120,8 @@ void ShowSurfaceScreen(UIData &data);
 void ButtonOne();
 
 void ButtonTwo();
+
+void RestoreMenu();
 
 void ShowDiveTopRow(UIData &data);
 

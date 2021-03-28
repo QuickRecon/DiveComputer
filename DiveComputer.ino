@@ -6,12 +6,13 @@ void ResetWatchdog() {
 }
 
 void setup() {
+    // Disable wifi
     WiFi.forceSleepBegin();
+
+    // Configure startup CS pins
     pinMode(TFT_CS, OUTPUT);
     pinMode(RTC_CS, OUTPUT);
-    pinMode(TFT_LED, OUTPUT);
-    pinMode(TFT_RST, OUTPUT);
-    pinMode(PWR_UP_PIN, INPUT);
+    pinMode(TFT_LED, OUTPUT); // Override LED because PWM is software and we ain't got the time
 
     digitalWrite(TFT_CS, HIGH);
     digitalWrite(RTC_CS, HIGH);
@@ -19,16 +20,22 @@ void setup() {
 
     Tft.begin();
     Tft.clear();
-    Tft.setOrientation(1);
-    //Serial.begin(9600);
+    Tft.setOrientation(3);
+    Serial.begin(9600);
+
+    // Register buttons
+
+    Serial.println("Start self test");
     bool pass = SelfTest();
     delay(2000); // Let some Time for the user to look at the self test
     if (!pass) {
-        Tft.setDisplay(false);
+        Serial.println("FAIL self test!");
+        //Tft.setDisplay(false);
         //ESP.restart();
-        MenuItem dummyItem;
-        TurnOffCallback(dummyItem); // Shutdown
+        //MenuItem dummyItem;
+        //TurnOffCallback(dummyItem); // Shutdown
     }
+    Serial.println("Pass self test");
 }
 
 void loop() {
