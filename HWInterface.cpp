@@ -39,26 +39,12 @@ bool InitDepth() {
 }
 
 bool InitIO() {
-    // Set pin modes
-    //IOExpander.pinMode(P0, OUTPUT);
-    //IOExpander.pinMode(P1, OUTPUT);
-    //IOExpander.pinMode(P2, OUTPUT);
-    //IOExpander.pinMode(P3, INPUT);
-    //IOExpander.pinMode(P4, INPUT);
-    //IOExpander.pinMode(P5, INPUT);
-    //IOExpander.pinMode(P6, INPUT);
-    //IOExpander.pinMode(P7, INPUT);
+    DisableReset();
 
-    //IOExpander.digitalWrite(OUTPUT_ENABLE,LOW);
-    //DisableReset();
-
-    Wire.beginTransmission(IO_READ_ADDRESS);
+    Wire.beginTransmission(IO_ADDRESS);
     bool readOK = Wire.endTransmission() == 0;
 
-    Wire.beginTransmission(IO_WRITE_ADDRESS);
-    bool writeOK = Wire.endTransmission() == 0;
-
-    return readOK && writeOK;
+    return readOK;
 }
 
 bool InitADC() {
@@ -94,7 +80,7 @@ RealTime ReadRTC() {
 }
 
 void PollButtons() {
-    Wire.requestFrom(IO_READ_ADDRESS, (uint8_t) 1);
+    Wire.requestFrom((uint8_t) IO_ADDRESS, (uint8_t) 1);
     byte IOByte = Wire.read();// Read a byte
 
     Serial.println(IOByte);
@@ -186,28 +172,40 @@ void TurnOff() {
     // Arm the reset circuit
     EnableReset();
 
-    ESP.deepSleep(0); // Shut down
+    delay(1000);
+
+    wifi_station_disconnect();
+    wifi_set_opmode_current(NULL_MODE);
+    wifi_fpm_set_sleep_type(
+            LIGHT_SLEEP_T); // set sleep type, the above    posters wifi_set_sleep_type() didnt seem to work for me although it did let me compile and upload with no errors
+    wifi_fpm_open(); // Enables force sleep
+    gpio_pin_wakeup_enable(GPIO_ID_PIN(15), // Use TX pin so we can fire a reset event via the fischer port if needed
+                           GPIO_PIN_INTR_LOLEVEL); // GPIO_ID_PIN(2) corresponds to GPIO2 on ESP8266-01 , GPIO_PIN_INTR_LOLEVEL for a logic low, can also do other interrupts, see gpio.h above
+    wifi_fpm_do_sleep(0xFFFFFFF); // Sleep for longest possible Time
+    delay(500);
+    // Be Asleep
+    ESP.restart(); //On Wake restart, However we should never wake via this route
 }
 
 void EnableReset() {
-    Wire.beginTransmission(IO_WRITE_ADDRESS); // Plus 1 to switch to write address
+    Wire.beginTransmission(IO_ADDRESS); // Plus 1 to switch to write address
     Wire.write(LATCH_ENABLE_RESET_ENABLE);
-    delay(10); // Delay a tad to allow the circuits to set up
+    delay(100); // Delay a tad to allow the circuits to set up
     Wire.write(LATCH_DISABLE_RESET_ENABLE);
     Wire.endTransmission();
 }
 
 void DisableReset() {
-    Wire.beginTransmission(IO_WRITE_ADDRESS);
+    Wire.beginTransmission(IO_ADDRESS);
     Wire.write(LATCH_ENABLE_RESET_DISABLE);
-    delay(10); // Delay a tad to allow the circuits to set up
+    delay(100); // Delay a tad to allow the circuits to set up
     Wire.write(LATCH_DISABLE_RESET_DISABLE);
     Wire.endTransmission();
 }
 
 double ReadBatteryVoltage() {
     int16_t batteryVal;
-    batteryVal = analogRead(BATTERY_PIN);
+    batteryVal = analogRead(BATTERY_PIN); // Clion doesn't recognise A0 and it makes me sad :(
 
     double dividerTop = 92.9;
     double dividerBottom = 97.7;
