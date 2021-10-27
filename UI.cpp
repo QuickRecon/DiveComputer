@@ -1,6 +1,8 @@
 //
 // Created by aren on 30/1/21.
 //
+#include <UI/Menu.h>
+
 #include "UI.h"
 
 // UI Elements
@@ -605,3 +607,5 @@ void CalibrateCompassCallback(MenuItem &item) {
 }
 
 MenuItem::MenuItem() = default;
+
+
