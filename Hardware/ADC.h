@@ -12,6 +12,8 @@ class ADC {
 public:
     ADC(int address, adsGain_t gain);
 
+    ADC() : ADC(0x48, GAIN_SIXTEEN) {};
+
     double ReadValue(int channel);
 
     double ReadVoltage(int channel, bool millivolts);

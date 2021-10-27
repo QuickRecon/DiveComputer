@@ -34,28 +34,28 @@ enum Mode {
     WIFI
 };
 
-struct MenuItem {
-    MenuItem();
-
-    const char *MenuText{};
-
-    void ( *Callback)(MenuItem &item){};
-    bool Enabled{};
-
-    MenuItem(const char *menuText, void (*const callback)(MenuItem &item), bool enabled) : MenuText(menuText),
-                                                                                           Callback(callback),
-                                                                                           Enabled(enabled) {}
-};
-
-struct Menu
-{
-    struct MenuItem **Items;
-    int ItemsSize;
-    int CurrIndex;
-
-    Menu(struct MenuItem **items, int itemsSize, int currIndex) : Items(items), ItemsSize(itemsSize),
-                                                                  CurrIndex(currIndex) {}
-};
+//struct MenuItem {
+//    MenuItem();
+//
+//    const char *MenuText{};
+//
+//    void ( *Callback)(MenuItem &item){};
+//    bool Enabled{};
+//
+//    MenuItem(const char *menuText, void (*const callback)(MenuItem &item), bool enabled) : MenuText(menuText),
+//                                                                                           Callback(callback),
+//                                                                                           Enabled(enabled) {}
+//};
+//
+//struct Menu
+//{
+//    struct MenuItem **Items;
+//    int ItemsSize;
+//    int CurrIndex;
+//
+//    Menu(struct MenuItem **items, int itemsSize, int currIndex) : Items(items), ItemsSize(itemsSize),
+//                                                                  CurrIndex(currIndex) {}
+//};
 
 struct UIState {
     int Mode;

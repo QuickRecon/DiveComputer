@@ -33,3 +33,4 @@ double ADC::ReadVoltage(int channel, bool millivolts) {
 bool ADC::check() {
     return ready;
 }
+
