@@ -4,10 +4,11 @@
 
 #ifndef DIVECOMPUTER_SURFACEMODE_H
 #define DIVECOMPUTER_SURFACEMODE_H
-
+#include "UI/Menu.h"
 
 class SurfaceMode {
-
+public:
+    SurfaceMode();
 };
 
 

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dive Computer Manager</title>
+    <style>html {
+        font-family: Helvetica;
+        display: inline-block;
+        margin: 0px auto;
+        text-align: center;
+    }
+
+    body {
+        margin-top: 50px;
+    }
+
+    h1 {
+        color: #444444;
+        margin: 50px auto 30px;
+    }
+
+    h3 {
+        color: #444444;
+        margin-bottom: 50px;
+    }
+
+    p {
+        font-size: 14px;
+        color: #888;
+        margin-bottom: 10px;
+    }
+
+    .dive {
+        display: block;
+        width: 80px;
+        background-color: #09BC8A;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        text-decoration: none;
+        font-size: 15px;
+        margin: 0px auto 10px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .settings {
+        display: inline-block;;
+        width: 80px;
+        background-color: #058ED9;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        text-decoration: none;
+        font-size: 15px;
+        margin: 0px auto 10px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .clear {
+        display: inline-block;;
+        width: 80px;
+        background-color: #F4442E;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        text-decoration: none;
+        font-size: 15px;
+        margin: 0px auto 10px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    </style>
+</head>
+<body>
+<h1>Dive Computer Manager</h1>
+<h2>Settings</h2>
+<form action="/get">
+    Low Gradient Factor: <input type="number" name="gfLow" value="40">
+    <br/>
+    <br/>
+    High Gradient Factor: <input type="number" name="gfLow" value="70">
+    <br/>
+    <br/>
+    Water Density <input type="number" name="waterDensity" value="1000">
+    <br/>
+    <br/>
+    <table id="myTable" style="border:1px solid black;margin: 0 auto;">
+        <tr>
+            <td>
+
+            </td>
+            <td>
+                Oxygen %
+            </td>
+            <td>
+                Helium %
+            </td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+                1:
+            </td>
+            <td>
+                <input type="number" name="gfLow" value="70">
+            </td>
+            <td>
+                <input type="number" name="gfLow" value="70">
+            </td>
+            <td>
+                <input type="button" value="Delete"/>
+            </td>
+        </tr>
+    </table>
+    <br/>
+    <input type="button" value="Add Gas">
+    <br/>
+    <br/>
+    <input type="submit" value="Submit">
+</form>
+</body>
+</html>

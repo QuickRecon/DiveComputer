@@ -5,13 +5,18 @@
 #ifndef DIVECOMPUTER_MENU_H
 #define DIVECOMPUTER_MENU_H
 
-#include "Hardware/HardwareManager.h"
+#include <vector>
+#include <string>
 
 class MenuItem {
 public:
     MenuItem() = delete;
 
-    MenuItem(const char *menuText, void (*callback)(MenuItem &item));
+    MenuItem(std::string menuText, void (*callback)(MenuItem &item));
+
+    MenuItem(MenuItem **pItem);
+
+    ~MenuItem();
 
     void ( *Callback)(MenuItem &item){};
 
@@ -21,10 +26,10 @@ public:
 
     bool CheckEnabled() const;
 
-    const char *GetText();
+    std::string GetText() const;
 
 private:
-    const char *MenuText{};
+    std::string MenuText{};
     bool Enabled{};
 };
 
@@ -33,7 +38,9 @@ class Menu {
 public:
     Menu() = delete;
 
-    Menu(MenuItem *(*items), int itemsSize, int menuHeight);
+    Menu(std::vector<MenuItem> *items, void (*drawFunction)(std::string), void (*clearFunction)());
+
+    ~Menu();
 
     void ShowMenu();
 
@@ -43,12 +50,20 @@ public:
 
     void CloseMenu();
 
+    int GetSize();
+
+    void AddItem(MenuItem item);
+
+    void ClearItems();
+
 private:
-    int MenuHeight;
-    int ItemsSize;
+    void (*DrawFunction)(std::string);
+
+    void (*ClearFunction)();
+
     int CurrIndex;
 
-    MenuItem *(*Items);
+    std::vector<MenuItem> *Items;
 };
 
 
