@@ -5,18 +5,7 @@
 #ifndef DIVECOMPUTER_DECO_TESTS_H
 #define DIVECOMPUTER_DECO_TESTS_H
 
-#include "TestsManager.h"
+#include <catch2/catch_test_macros.hpp>
 #include <Deco.h>
-
-
-void RegisterDecoTests(std::vector<Test> &tests);
-
-bool TestAddGas();
-
-bool TestMeterBar();
-
-bool TestBarMeter();
-
-bool TestSwitchGas();
-
+;
 #endif //DIVECOMPUTER_DECO_TESTS_H
