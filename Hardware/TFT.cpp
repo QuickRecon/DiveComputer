@@ -2,6 +2,7 @@
 // Created by aren on 2/8/21.
 //
 
+
 #include "TFT.h"
 
 TFT::TFT(int8_t resetPin, int8_t registerPin, int8_t chipPin, int ledPin) {
@@ -22,7 +23,7 @@ void TFT::setFont(uint8_t *font) {
     this->tft.setFont(font);
 }
 
-void TFT::drawText(uint16_t x, uint16_t y, String s, uint16_t color) {
+void TFT::drawText(uint16_t x, uint16_t y, std::string s, uint16_t color) {
     this->tft.drawText(x, y, s, color);
 }
 

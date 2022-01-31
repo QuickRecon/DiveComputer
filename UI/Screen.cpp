@@ -4,28 +4,31 @@
 
 #include "Screen.h"
 
-Screen::Screen(UIElement *elements, int elementSize, int xsize, int ysize) {
+Screen::Screen(std::vector<UIElement> *elements, int xsize, int ysize, int screenX, int screenY) {
+    if (xsize * ysize != elements->size()) {
+        throw "Elements does not match screen dimensions";
+    }
+
     this->Elements = elements;
-    this->ElementCount = elementSize;
     this->xSize = xsize;
     this->ySize = ysize;
+    this->ScreenX = screenX;
+    this->ScreenY = screenY;
 }
 
 void Screen::update() {
-    int xInterval = this->xSize / hardwareManager.tft.maxX();
-    int yInterval = this->ySize / hardwareManager.tft.maxY();
+    int xInterval = this->ScreenX / this->xSize;
+    int yInterval = this->ScreenY / this->ySize;
 
-    for (int i = 0; i < this->ElementCount; i++) {
-        UIElement uiElement = this->Elements[i];
+    for (auto uiElement : *this->Elements) {
         uiElement.UpdateData();
         int position = uiElement.GetPosition();
         int xIndex = position % this->xSize;
-        int yIndex = position / this->ySize + 1;
+        int yIndex = position / this->ySize;
 
         int xCoord = xIndex * xInterval;
         int yCoord = yIndex * yInterval;
 
-        hardwareManager.tft.drawText(xCoord, yCoord, uiElement.GetTitle());
-        hardwareManager.tft.drawText(xCoord, yCoord - VAL_OFFSET, uiElement.GetData());
+        uiElement.Draw(xCoord, yCoord);
     }
 }

@@ -4,15 +4,11 @@
 
 #include "UIElement.h"
 
-char *UIElement::GetTitle() {
-    return const_cast<char *>(this->Title);
+std::string UIElement::GetTitle() {
+    return this->Title;
 }
 
-int UIElement::GetPosition() {
-    return this->Position;
-}
-
-char *UIElement::GetData() {
+std::string UIElement::GetData() {
     return this->Data;
 }
 
@@ -20,9 +16,19 @@ void UIElement::UpdateData() {
     this->Data = this->UpdateFunction();
 }
 
-UIElement::UIElement(char *title, int position, char *(*updateFunction)()) {
-    this->Title = title;
+int UIElement::GetPosition() {
+    return this->Position;
+}
+
+UIElement::UIElement(std::string title, int position, std::string (*updateFunction)(),
+                     void (*drawFunction)(int, int, UIElement *)) {
+    this->Title = std::move(title);
     this->Position = position;
     this->UpdateFunction = updateFunction;
+    this->DrawFunction = drawFunction;
     this->Data = "";
+}
+
+void UIElement::Draw(int XCoord, int YCoord) {
+    this->DrawFunction(XCoord, YCoord, this);
 }

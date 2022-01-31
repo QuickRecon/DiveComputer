@@ -5,8 +5,8 @@
 #ifndef DIVECOMPUTER_SCREEN_H
 #define DIVECOMPUTER_SCREEN_H
 
+#include <vector>
 #include "UIElement.h"
-#include "Hardware/HardwareManager.h"
 
 #define VAL_OFFSET 15
 
@@ -14,15 +14,16 @@ class Screen {
 public:
     Screen() = delete;
 
-    Screen(UIElement *elements, int elementSize, int xSize, int ySize);
+    Screen(std::vector<UIElement> *elements, int xsize, int ysize, int screenX, int screenY);
 
     void update();
 
 private:
-    int ElementCount;
+    int ScreenX;
+    int ScreenY;
     int xSize;
     int ySize;
-    UIElement Elements[];
+    std::vector<UIElement> *Elements;
 };
 
 

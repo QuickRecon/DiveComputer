@@ -5,8 +5,9 @@
 #ifndef DIVECOMPUTER_DRAWER_H
 #define DIVECOMPUTER_DRAWER_H
 
-
 #include <string>
+#include "UIElement.h"
+#include <Hardware/HardwareManager.h>
 
 class Drawer {
 public:
@@ -14,8 +15,12 @@ public:
 
     void ClearMenu();
 
+    void DrawUIElement(int xCoord, int yCoord, UIElement *uiElement);
+
 private:
     int MenuHeight;
+    int ValueOffset;
+
 };
 
 

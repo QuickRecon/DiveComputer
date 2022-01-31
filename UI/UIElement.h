@@ -5,27 +5,34 @@
 #ifndef DIVECOMPUTER_UIELEMENT_H
 #define DIVECOMPUTER_UIELEMENT_H
 
+#include <string>
+#include <utility>
 
 class UIElement {
 public:
     UIElement() = delete;
 
-    UIElement(char *title, int position, char *(*UpdateFunction)());
-
-    char *GetTitle();
+    UIElement(std::string title, int position, std::string (*UpdateFunction)(),
+              void (*DrawFunction)(int, int, UIElement *));
 
     int GetPosition();
 
-    char *GetData();
+    std::string GetTitle();
+
+    std::string GetData();
 
     void UpdateData();
 
-private:
-    const char *Title;
-    int Position;
-    char *Data;
+    void Draw(int XCoord, int YCoord);
 
-    char *(*UpdateFunction)();
+private:
+    std::string Title;
+    std::string Data;
+    int Position;
+
+    std::string (*UpdateFunction)();
+
+    void (*DrawFunction)(int, int, UIElement *);
 };
 
 

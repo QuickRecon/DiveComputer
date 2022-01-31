@@ -6,6 +6,7 @@
 #define DIVECOMPUTER_TFT_H
 
 #include "TFT_22_ILI9225.h"
+#include <string>
 #include <Arduino.h>
 
 // TFT Params
@@ -23,7 +24,7 @@ public:
 
     void setFont(uint8_t *font);
 
-    void drawText(uint16_t x, uint16_t y, STRING s, uint16_t color = COLOR_WHITE);
+    void drawText(uint16_t x, uint16_t y, std::string s, uint16_t color = COLOR_WHITE);
 
     void fillRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color);
 
